@@ -12,13 +12,12 @@ import world as w
 
 import logging
 import pygame as pg
-from pygame.locals import *
 
-SPEED = 1
+SPEED = 2
 
-POS_INIT = (0., 0.)
+POS_INIT = (256., 256.)
 COL_INIT = (255, 255, 0)  # yellow
-SIZ_INIT = 8
+SIZ_INIT = 6
 STA_INIT = (0., 0.)
 
 
@@ -36,8 +35,8 @@ class Player:
         pg.draw.circle(self.surface, self.color, self.position, self.size)
 
     def set_state(self, x=None, y=None):
-        self.state = x*SPEED if x is not None else self.state[0], self.state[1]
-        self.state = self.state[0], y*SPEED if y is not None else self.state[1]
+        self.state = (self.state[0]+x*SPEED if x is not None else self.state[0],
+                      self.state[1]+y*SPEED if y is not None else self.state[1])
 
         logging.debug(f"state update: {self.state}")
 
