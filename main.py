@@ -3,7 +3,7 @@
 # Hundefels 2D
 # a small 2.5D game by Christian Korn
 #
-# VERSION = "0.0.1"
+# VERSION = "0.0.2"
 #
 # all rights reserved
 
@@ -70,6 +70,10 @@ def main():
                     pl.set_state(y=1)
                 if event.key == K_d:
                     pl.set_state(x=1)
+                if event.key == K_RIGHT:
+                    pl.set_state(r=-1)
+                if event.key == K_LEFT:
+                    pl.set_state(r=1)
 
             elif event.type == KEYUP:
                 if event.key == K_w:
@@ -80,6 +84,10 @@ def main():
                     pl.set_state(y=-1)
                 if event.key == K_d:
                     pl.set_state(x=-1)
+                if event.key == K_RIGHT:
+                    pl.set_state(r=1)
+                if event.key == K_LEFT:
+                    pl.set_state(r=-1)
 
         screen.fill((80, 80, 80))
 

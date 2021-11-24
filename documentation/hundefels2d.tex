@@ -1,0 +1,99 @@
+\documentclass[a4paper]{article}
+\title{CT Projekt: Raycasting engine (Hundefels 2D)}
+\author{Christian Korn}
+\date{20.10.2021 - 11.01.2022}
+
+\begin{document}
+	
+\pagenumbering{gobble}
+\maketitle
+
+\newpage
+
+\pagenumbering{arabic}
+\tableofcontents
+
+\newpage
+
+\section{Ziele}
+
+\subsection{Muss-Ziele}
+Wenn diese Ziele nicht ereicht werden, wird das Projekt als Fehlschlag angesehen.
+
+\begin{itemize}
+\item Anzeigen eines 2D Levels in 2,5D (Raycasting Methode)
+\item Bewegungsfreiheit im Level (Translation und Rotation)
+\end{itemize}
+
+\subsection{Soll-Ziele}
+Diese Ziele müssen nicht unbedingt ereicht werden, sind aber für einen vollen Erfolg nötig.
+
+\begin{itemize}
+\item Laden von Leveln aus Dateien
+\item Anzeigen von anderen Objekten im Level (z.B. Gegner, Items)
+\item Kollisionserkennung
+\end{itemize}
+
+\subsection{Kann-Ziele}
+Diese Ziele sind nicht nötig, können aber nach Vollendung der Höheren Ziele in Angriff genommen werden.
+
+
+\begin{itemize}
+\item Gegner KI
+\item Schießen
+\item Sprites
+\item Texturen für Wände
+\item visuelle Effekte (view bobbing, Blutspritzer)
+\end{itemize}
+
+\newpage
+
+\section{Mathematische Funktionsweise}
+
+\setlength{\unitlength}{1cm}
+\begin{picture}(5,4)
+	\multiput(0,0)(1,0){6}{\line(0,1){4}}
+	\multiput(0,0)(0,1){5}{\line(1,0){5}}
+	\multiput(0,0)(0.1,0){50}{\line(0,1){1}}
+	\put(1,3){\circle*{0.3}}
+	\thicklines
+	\put(1,3){\vector(3,-2){3}}
+\end{picture}
+
+
+\newpage
+
+\section{Programmaufbau}
+\subsection{geplant}
+\subsection{ausgeführt}
+
+\newpage
+
+\section{Steuerung}
+
+\subsection{Bewegung}
+
+\subsubsection{Translation (Laufen)}
+\begin{itemize}
+\item Vorwärts: `W'
+\item Links: `A'
+\item Rückwärts: `S'
+\item Rechts: `D'
+\end{itemize}
+
+\subsubsection{Rotation}
+\begin{itemize}
+\item Links: linke Pfeiltaste ($\leftarrow$)
+\item Rechts: rechte Pfeiltaste ($\rightarrow$)
+\end{itemize}
+
+\newpage
+
+\begin{flushleft}
+\begin{thebibliography}{99}
+\bibitem{rcp} 3DSage: ~ ``Make Your Own Raycaster Part 1'' ~ https://youtu.be/gYRrGTC7GtA
+\bibitem{pygame} Pygame tutorial: 	
+\end{thebibliography}
+\end{flushleft}
+
+\end{document}
