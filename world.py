@@ -9,7 +9,6 @@
 
 import logging
 import pygame as pg
-from pygame.locals import *
 
 
 LEVEL = ((1, 1, 1, 1, 1, 1, 1, 1),
@@ -22,6 +21,9 @@ LEVEL = ((1, 1, 1, 1, 1, 1, 1, 1),
          (1, 1, 1, 1, 1, 1, 1, 1))
 
 BLOCK_SIZE = 64
+SIZE = 8
+MAP_X = 8
+MAP_Y = 8
 
 SCREEN_SIZE = (1024, 512)
 size = SCREEN_SIZE
@@ -37,10 +39,11 @@ class Level:
         for y, yv in enumerate(self.map):
             for x, xv in enumerate(yv):
                 if xv == 1:
-                    color = (255, 255, 255)
+                    color = (255, 255, 255)  # white
                 else:
-                    color = (0, 0, 0)
+                    color = (0, 0, 0)  # black
 
+                # calculate coordinates of block vertices, add one pixel of border around them
                 positions = ((self.position[0] + x * BLOCK_SIZE+1, self.position[1] + y * BLOCK_SIZE+1),
                              (self.position[0] + (x+1) * BLOCK_SIZE-1, self.position[1] + y * BLOCK_SIZE+1),
                              (self.position[0] + (x+1) * BLOCK_SIZE-1, self.position[1] + (y+1) * BLOCK_SIZE-1),

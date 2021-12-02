@@ -13,18 +13,30 @@ import math
 import logging
 import pygame as pg
 
-SPEED = 1.5  # pixels/frame
-ROT_SPEED = 0.06  # rad/frame
 
-POS_INIT = (256., 256., 0.)
+SPEED = 1.5  # pixels/frame
+ROT_SPEED = 0.08  # rad/frame
+
+POS_INIT = (256., 256., 2*math.pi)  # x, y, rotation
 SIZ_INIT = 6
 COL_INIT = (255, 255, 0)  # yellow
 STA_INIT = (0., 0., 0.)  # speed forward, speed right, rotation anticlockwise
 
+RAY_X_COLOR = (0, 255, 0)  # green
+RAY_Y_COLOR = (0, 0, 255)  # blue
+WALL_X_COLOR = (255, 0, 0)  # red
+WALL_Y_COLOR = (127, 0, 0)  # darker red
+
+DISTANCE = 100000
+
+RAYS = 1
+FOV = math.pi/2  # 90 degrees
+
 
 class Player:
-    def __init__(self, srf, pos=POS_INIT, col=COL_INIT, siz=SIZ_INIT, sta=STA_INIT):
+    def __init__(self, srf, lvl, pos=POS_INIT, col=COL_INIT, siz=SIZ_INIT, sta=STA_INIT):
         self.surface = srf
+        self.level = lvl
         self.position = pos
         self.color = col
         self.size = siz
@@ -36,26 +48,114 @@ class Player:
 
     def draw(self):
         pg.draw.circle(self.surface, self.color, self.position[:2], self.size)
-        logging.debug(f"w{self.position=}")
         line_end = (self.position[0] + 4*self.size*math.cos(-self.position[2] - 0.5*math.pi),
                     self.position[1] + 4*self.size*math.sin(-self.position[2] - 0.5*math.pi))
         pg.draw.line(self.surface, self.color, self.position[:2], line_end, int(self.size/3))
+        self._cast_rays()
+
+    def _cast_rays(self):
+        ray_angle = (self.position[2] - math.pi / 2)
+        if ray_angle < 0:
+            ray_angle += 2 * math.pi
+        elif ray_angle > 2 * math.pi:
+            ray_angle -= 2 * math.pi
+
+        for i in range(RAYS):
+
+            atan = 1 / math.tan(ray_angle)
+            natan = -1 / math.tan(self.position[2])
+
+            # vertical lines
+            dof = 0
+            if math.pi/2 < ray_angle < 1.5*math.pi:  # looking right
+                rx = (int(self.position[0] / w.BLOCK_SIZE)) * w.BLOCK_SIZE
+                ry = (self.position[0] - rx) * natan + self.position[1]
+                rx -= 1
+                x_offset = w.BLOCK_SIZE
+                y_offset = - x_offset*natan
+
+            if ray_angle > 1.5*math.pi or math.pi/2 > ray_angle:  # looking left
+                rx = (int(self.position[0] / w.BLOCK_SIZE)) * w.BLOCK_SIZE - w.BLOCK_SIZE
+                ry = (self.position[0] - rx) * natan + self.position[1]
+                x_offset = - w.BLOCK_SIZE
+                y_offset = - x_offset*natan
+
+            if ray_angle in (math.pi/2, 1.5*math.pi):  # looking straight up or down
+                rx = self.position[0]
+                ry = self.position[1]
+                dof = w.SIZE
+
+            while dof < w.SIZE:
+                mx = int(rx/64)
+                my = int(ry/64)
+                logging.debug(f"0: angle={self.position[2]} {mx=} {my=} {natan=}")
+                if 0 <= mx < w.SIZE and 0 <= my < w.SIZE:
+                    if self.level.map[my][mx] == 1:  # hit wall
+                        dof = w.SIZE
+                    else:
+                        rx += x_offset
+                        ry += y_offset
+                        dof += 1
+                else:
+                    rx += x_offset
+                    ry += y_offset
+                    dof += 1
+                logging.debug(f"1: angle={self.position[2]} {mx=} {my=} {natan=}")
+
+            pg.draw.line(self.surface, RAY_Y_COLOR, self.position[:2], (rx, ry), 4)
+
+            #####################################
+            # horizontal lines
+            dof = 0
+            if ray_angle > math.pi:  # looking up
+                ry = (int(self.position[1] / w.BLOCK_SIZE)) * w.BLOCK_SIZE
+                rx = (self.position[1] - ry) * atan + self.position[0]
+                ry -= 1
+                y_offset = - w.BLOCK_SIZE
+                x_offset = - y_offset*atan
+
+            if ray_angle < math.pi:  # looking down
+                ry = (int(self.position[1] / w.BLOCK_SIZE)) * w.BLOCK_SIZE + w.BLOCK_SIZE
+                rx = (self.position[1] - ry) * atan + self.position[0]
+                y_offset = w.BLOCK_SIZE
+                x_offset = - y_offset*atan
+
+            if ray_angle in (0, math.pi, 2*math.pi):  # looking straight left or right
+                rx = self.position[0]
+                ry = self.position[1]
+                dof = w.SIZE
+
+            while dof < w.SIZE:
+                mx = int(rx/64)
+                my = int(ry/64)
+                if 0 <= mx < w.SIZE and 0 <= my < w.SIZE:
+                    if self.level.map[my][mx] == 1:  # hit wall
+                        dof = w.SIZE
+                    else:
+                        rx += x_offset
+                        ry += y_offset
+                        dof += 1
+                else:
+                    rx += x_offset
+                    ry += y_offset
+                    dof += 1
+
+            pg.draw.line(self.surface, RAY_X_COLOR, self.position[:2], (rx, ry), 2)
 
     def set_state(self, x=None, y=None, r=None):
-        """ f:forward, s:sidewards (right), r:rotation (counterclockwise)"""
-
+        """ f:forward, s:sidewards (right), r:rotation (counterclockwise)
+        """
         self.state = (self.state[0]+x*SPEED if x is not None else self.state[0],
                       self.state[1]+y*SPEED if y is not None else self.state[1],
                       self.state[2]+r*ROT_SPEED if r is not None else self.state[2])
 
-        logging.debug(f"state update: {self.state} {self.position}")
+        logging.debug(f"player state update: {self.state} {self.position}")
 
     def move(self):
-
         self.movement = self._set_move_speed()
 
         rot = self.position[2] + self.state[2]  # calculate new angle
-        if rot < 0:
+        if rot <= 0:  # reset the angle if it is outside normal range
             rot += 2*math.pi
         elif rot > 2*math.pi:
             rot -= 2*math.pi
@@ -78,6 +178,8 @@ class Player:
         self.position = new_pos
 
     def _set_move_speed(self):
+        """ calculate absolute movement speed from movement relative to player rotation
+        """
         x = self.state[0]*math.cos(self.position[2]) + self.state[1]*math.sin(self.position[2])
         y = self.state[1]*math.cos(self.position[2]) - self.state[0]*math.sin(self.position[2])
         return x, y

@@ -24,11 +24,6 @@ from pygame.locals import *
 
 SCREEN_SIZE = (1024, 512)
 
-P_POSITION_INIT = (512., 255.)
-P_COLOR_INIT = (255, 255, 0)  # yellow
-P_STATE_INIT = (0., 0.)
-P_SIZE_INIT = 8
-
 
 # noinspection PyArgumentList
 logging.basicConfig(format="%(asctime)s:%(levelname)s:%(message)s", datefmt="%H:%M:%S",
@@ -43,8 +38,8 @@ def main():
 
     logging.debug("initialized screen")
 
-    pl = p.Player(screen)
     lv = w.Level(screen)
+    pl = p.Player(screen, lv)
 
     screen.fill((80, 80, 80))
     pg.display.flip()
