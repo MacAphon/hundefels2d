@@ -10,15 +10,9 @@
 import player as p
 import world as w
 
-
-import sys
-import math
-import os
-import getopt
 import time
 import logging
 import pygame as pg
-from socket import *
 from pygame.locals import *
 
 

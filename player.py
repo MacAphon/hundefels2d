@@ -50,42 +50,50 @@ class Player:
         pg.draw.circle(self.surface, self.color, self.position[:2], self.size)
         line_end = (self.position[0] + 4*self.size*math.cos(-self.position[2] - 0.5*math.pi),
                     self.position[1] + 4*self.size*math.sin(-self.position[2] - 0.5*math.pi))
-        pg.draw.line(self.surface, self.color, self.position[:2], line_end, int(self.size/3))
         self._cast_rays()
+        pg.draw.line(self.surface, self.color, self.position[:2], line_end, int(self.size/3))
 
     def _cast_rays(self):
-        ray_angle = (self.position[2] - math.pi / 2)
-        if ray_angle < 0:
-            ray_angle += 2 * math.pi
-        elif ray_angle > 2 * math.pi:
-            ray_angle -= 2 * math.pi
+        ray_angle_y = (self.position[2] - math.pi / 2)
 
         for i in range(RAYS):
 
-            atan = 1 / math.tan(ray_angle)
-            natan = -1 / math.tan(self.position[2])
+            if ray_angle_y < 0:
+                ray_angle_y += 2 * math.pi
+            elif ray_angle_y > 2 * math.pi:
+                ray_angle_y -= 2 * math.pi
+
+            ray_angle_x = ray_angle_y + math.pi/2
+
+            if ray_angle_x < 0:
+                ray_angle_x += 2 * math.pi
+            elif ray_angle_x > 2 * math.pi:
+                ray_angle_x -= 2 * math.pi
+
+            atan = 1 / math.tan(ray_angle_y)
+            natan = -1 / math.tan(ray_angle_x)
 
             # vertical lines
             dof = 0
-            if math.pi/2 < ray_angle < 1.5*math.pi:  # looking right
-                rx = (int(self.position[0] / w.BLOCK_SIZE)) * w.BLOCK_SIZE
+            if math.pi/2 < ray_angle_y < 1.5*math.pi:  # looking right
+                rx = (int(self.position[0] / w.BLOCK_SIZE)) * w.BLOCK_SIZE + w.BLOCK_SIZE
                 ry = (self.position[0] - rx) * natan + self.position[1]
-                rx -= 1
                 x_offset = w.BLOCK_SIZE
                 y_offset = - x_offset*natan
 
-            if ray_angle > 1.5*math.pi or math.pi/2 > ray_angle:  # looking left
-                rx = (int(self.position[0] / w.BLOCK_SIZE)) * w.BLOCK_SIZE - w.BLOCK_SIZE
+            if ray_angle_y > 1.5*math.pi or math.pi/2 > ray_angle_y:  # looking left
+                rx = (int(self.position[0] / w.BLOCK_SIZE)) * w.BLOCK_SIZE
                 ry = (self.position[0] - rx) * natan + self.position[1]
+                rx -= 1
                 x_offset = - w.BLOCK_SIZE
                 y_offset = - x_offset*natan
 
-            if ray_angle in (math.pi/2, 1.5*math.pi):  # looking straight up or down
+            if ray_angle_y in (math.pi/2, 1.5*math.pi):  # looking straight up or down
                 rx = self.position[0]
                 ry = self.position[1]
                 dof = w.SIZE
 
-            while dof < w.SIZE:
+            while dof < w.SIZE:  # check for walls
                 mx = int(rx/64)
                 my = int(ry/64)
                 logging.debug(f"0: angle={self.position[2]} {mx=} {my=} {natan=}")
@@ -102,30 +110,31 @@ class Player:
                     dof += 1
                 logging.debug(f"1: angle={self.position[2]} {mx=} {my=} {natan=}")
 
-            pg.draw.line(self.surface, RAY_Y_COLOR, self.position[:2], (rx, ry), 4)
+            rvx = rx
+            rvy = ry
 
-            #####################################
+            ########################################################################
             # horizontal lines
             dof = 0
-            if ray_angle > math.pi:  # looking up
+            if ray_angle_y > math.pi:  # looking up
                 ry = (int(self.position[1] / w.BLOCK_SIZE)) * w.BLOCK_SIZE
                 rx = (self.position[1] - ry) * atan + self.position[0]
                 ry -= 1
                 y_offset = - w.BLOCK_SIZE
                 x_offset = - y_offset*atan
 
-            if ray_angle < math.pi:  # looking down
+            if ray_angle_y < math.pi:  # looking down
                 ry = (int(self.position[1] / w.BLOCK_SIZE)) * w.BLOCK_SIZE + w.BLOCK_SIZE
                 rx = (self.position[1] - ry) * atan + self.position[0]
                 y_offset = w.BLOCK_SIZE
                 x_offset = - y_offset*atan
 
-            if ray_angle in (0, math.pi, 2*math.pi):  # looking straight left or right
+            if ray_angle_y in (0, math.pi, 2*math.pi):  # looking straight left or right
                 rx = self.position[0]
                 ry = self.position[1]
                 dof = w.SIZE
 
-            while dof < w.SIZE:
+            while dof < w.SIZE:  # check for walls
                 mx = int(rx/64)
                 my = int(ry/64)
                 if 0 <= mx < w.SIZE and 0 <= my < w.SIZE:
@@ -140,7 +149,20 @@ class Player:
                     ry += y_offset
                     dof += 1
 
-            pg.draw.line(self.surface, RAY_X_COLOR, self.position[:2], (rx, ry), 2)
+            rhx = rx
+            rhy = ry
+
+            vdist = math.sqrt((rvx-self.position[0])**2+(rvy-self.position[1])**2)
+            hdist = math.sqrt((rhx-self.position[0])**2+(rhy-self.position[1])**2)
+
+            if vdist > hdist:
+                rx, ry = rhx, rhy
+                col = RAY_X_COLOR
+            else:
+                rx, ry = rvx, rvy
+                col = RAY_Y_COLOR
+
+            pg.draw.line(self.surface, col, self.position[:2], (rx, ry))  # vertical
 
     def set_state(self, x=None, y=None, r=None):
         """ f:forward, s:sidewards (right), r:rotation (counterclockwise)
