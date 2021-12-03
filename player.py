@@ -3,7 +3,7 @@
 # Hundefels 2D
 # a small 2.5D game by Christian Korn
 #
-# VERSION = "0.0.2"
+# VERSION = "0.1.0"
 #
 # all rights reserved
 
@@ -14,10 +14,13 @@ import logging
 import pygame as pg
 
 
-SPEED = 1.5  # pixels/frame
+PI_HALFS = math.pi/2
+TWO_PI = math.pi*2
+
+SPEED = 3  # pixels/frame
 ROT_SPEED = 0.08  # rad/frame
 
-POS_INIT = (256., 256., 2*math.pi)  # x, y, rotation
+POS_INIT = (256., 256., TWO_PI)  # x, y, rotation
 SIZ_INIT = 6
 COL_INIT = (255, 255, 0)  # yellow
 STA_INIT = (0., 0., 0.)  # speed forward, speed right, rotation anticlockwise
@@ -29,8 +32,11 @@ WALL_Y_COLOR = (127, 0, 0)  # darker red
 
 DISTANCE = 100000
 
-RAYS = 1
-FOV = math.pi/2  # 90 degrees
+RAYS = 90
+FOV = PI_HALFS  # 90 degrees
+
+OFFSET_3D = 514
+WIDTH_3D = 512
 
 
 class Player:
@@ -47,23 +53,27 @@ class Player:
         logging.info("created new Player")
 
     def draw(self):
+        self._cast_rays()
         pg.draw.circle(self.surface, self.color, self.position[:2], self.size)
         line_end = (self.position[0] + 4*self.size*math.cos(-self.position[2] - 0.5*math.pi),
                     self.position[1] + 4*self.size*math.sin(-self.position[2] - 0.5*math.pi))
-        self._cast_rays()
         pg.draw.line(self.surface, self.color, self.position[:2], line_end, int(self.size/3))
 
     def _cast_rays(self):
         ray_angle_y = (self.position[2] - math.pi / 2)
+        ray_angle_y += FOV / 2
 
         for i in range(RAYS):
+
+            his0 = False
+            vis0 = False
 
             if ray_angle_y < 0:
                 ray_angle_y += 2 * math.pi
             elif ray_angle_y > 2 * math.pi:
                 ray_angle_y -= 2 * math.pi
 
-            ray_angle_x = ray_angle_y + math.pi/2
+            ray_angle_x = ray_angle_y + PI_HALFS
 
             if ray_angle_x < 0:
                 ray_angle_x += 2 * math.pi
@@ -75,28 +85,28 @@ class Player:
 
             # vertical lines
             dof = 0
-            if math.pi/2 < ray_angle_y < 1.5*math.pi:  # looking right
+            if PI_HALFS < ray_angle_y < 1.5*math.pi:  # looking right
                 rx = (int(self.position[0] / w.BLOCK_SIZE)) * w.BLOCK_SIZE + w.BLOCK_SIZE
                 ry = (self.position[0] - rx) * natan + self.position[1]
                 x_offset = w.BLOCK_SIZE
                 y_offset = - x_offset*natan
 
-            if ray_angle_y > 1.5*math.pi or math.pi/2 > ray_angle_y:  # looking left
+            if ray_angle_y > 1.5*math.pi or PI_HALFS > ray_angle_y:  # looking left
                 rx = (int(self.position[0] / w.BLOCK_SIZE)) * w.BLOCK_SIZE
                 ry = (self.position[0] - rx) * natan + self.position[1]
                 rx -= 1
                 x_offset = - w.BLOCK_SIZE
                 y_offset = - x_offset*natan
 
-            if ray_angle_y in (math.pi/2, 1.5*math.pi):  # looking straight up or down
+            if ray_angle_y in (PI_HALFS, 1.5*math.pi):  # looking straight up or down
                 rx = self.position[0]
                 ry = self.position[1]
+                vis0 = True
                 dof = w.SIZE
 
             while dof < w.SIZE:  # check for walls
                 mx = int(rx/64)
                 my = int(ry/64)
-                logging.debug(f"0: angle={self.position[2]} {mx=} {my=} {natan=}")
                 if 0 <= mx < w.SIZE and 0 <= my < w.SIZE:
                     if self.level.map[my][mx] == 1:  # hit wall
                         dof = w.SIZE
@@ -108,7 +118,6 @@ class Player:
                     rx += x_offset
                     ry += y_offset
                     dof += 1
-                logging.debug(f"1: angle={self.position[2]} {mx=} {my=} {natan=}")
 
             rvx = rx
             rvy = ry
@@ -129,9 +138,10 @@ class Player:
                 y_offset = w.BLOCK_SIZE
                 x_offset = - y_offset*atan
 
-            if ray_angle_y in (0, math.pi, 2*math.pi):  # looking straight left or right
+            if ray_angle_y in (0, math.pi, TWO_PI):  # looking straight left or right
                 rx = self.position[0]
                 ry = self.position[1]
+                his0 = True
                 dof = w.SIZE
 
             while dof < w.SIZE:  # check for walls
@@ -155,14 +165,29 @@ class Player:
             vdist = math.sqrt((rvx-self.position[0])**2+(rvy-self.position[1])**2)
             hdist = math.sqrt((rhx-self.position[0])**2+(rhy-self.position[1])**2)
 
-            if vdist > hdist:
-                rx, ry = rhx, rhy
-                col = RAY_X_COLOR
-            else:
+            if hdist > vdist and not vis0:
+                dist = vdist
                 rx, ry = rvx, rvy
-                col = RAY_Y_COLOR
+                wall_color = WALL_Y_COLOR
+            elif not his0:
+                dist = hdist
+                rx, ry = rhx, rhy
+                wall_color = WALL_X_COLOR
+            else:
+                dist = vdist
+                rx, ry = rvx, rvy
+                wall_color = WALL_Y_COLOR
 
-            pg.draw.line(self.surface, col, self.position[:2], (rx, ry))  # vertical
+            pg.draw.line(self.surface, RAY_X_COLOR, self.position[:2], (rx, ry))  # vertical
+
+            # First-Person Viewport
+
+            h_width = WIDTH_3D/RAYS
+            h_offset = OFFSET_3D + i * h_width
+            v_offset = (1 / dist+0.001)*9000
+            pg.draw.line(self.surface, wall_color, (h_offset, 255-v_offset), (h_offset, 255+v_offset), int(h_width)+1)
+
+            ray_angle_y -= FOV / RAYS
 
     def set_state(self, x=None, y=None, r=None):
         """ f:forward, s:sidewards (right), r:rotation (counterclockwise)
@@ -178,9 +203,9 @@ class Player:
 
         rot = self.position[2] + self.state[2]  # calculate new angle
         if rot <= 0:  # reset the angle if it is outside normal range
-            rot += 2*math.pi
-        elif rot > 2*math.pi:
-            rot -= 2*math.pi
+            rot += TWO_PI
+        elif rot > TWO_PI:
+            rot -= TWO_PI
 
         new_pos = (self.position[0] + self.movement[0],
                    self.position[1] + self.movement[1],

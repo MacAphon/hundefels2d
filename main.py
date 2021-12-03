@@ -3,7 +3,7 @@
 # Hundefels 2D
 # a small 2.5D game by Christian Korn
 #
-# VERSION = "0.0.2"
+# VERSION = "0.1.0"
 #
 # all rights reserved
 
@@ -44,7 +44,7 @@ def main():
     perf_warn = False
 
     while 1:
-        t = time.perf_counter() + 1/60
+        t = time.time() + 1/60
 
         for event in pg.event.get():
             if event.type == QUIT:
@@ -86,12 +86,12 @@ def main():
 
         pg.display.flip()
 
-        if time.perf_counter() >= t and not perf_warn:
+        if time.time() >= t and not perf_warn:
             perf_warn = True
             logging.warning("performance low, game may not work as intended")
 
-        while time.perf_counter() < t:
-            pass
+        while time.time() < t:
+            continue
 
 
 if __name__ == '__main__':
