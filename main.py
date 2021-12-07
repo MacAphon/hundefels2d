@@ -3,21 +3,28 @@
 # Hundefels 2D
 # a small 2.5D game by Christian Korn
 #
-# VERSION = "0.1.0"
+# VERSION = "0.1.1"
 #
 # all rights reserved
+
+import getopt
+import logging
+import sys
+import time
+
+import pygame as pg
+from pygame.locals import *
 
 import player as p
 import world as w
 
-import time
-import logging
-import pygame as pg
-from pygame.locals import *
-
-
 SCREEN_SIZE = (1024, 512)
 
+LEVEL_PATH = "data/levels.json"
+
+argument_list = sys.argv[1:]
+OPTIONS = "hlf:"
+LONG_OPTIONS = ("help", "level", "file", "fov", "rays")
 
 # noinspection PyArgumentList
 logging.basicConfig(format="%(asctime)s:%(levelname)s:%(message)s", datefmt="%H:%M:%S",
@@ -25,7 +32,54 @@ logging.basicConfig(format="%(asctime)s:%(levelname)s:%(message)s", datefmt="%H:
 
 
 def main():
-    logging.info("started")
+    logging.info("starting")
+    logging.info(f"{argument_list=}")
+
+    # parse command line arguments
+    try:
+        arguments, values = getopt.getopt(argument_list, OPTIONS, LONG_OPTIONS)
+        lv = None
+        lv_sel = False
+        for argument, value in arguments:
+            if argument in ("-h", "--help"):
+                logging.info("showing help")
+                print(f"options: -{OPTIONS[:-1]}\n"
+                      f"long options: {LONG_OPTIONS}\n\n"
+                      f"-h, --help: show this help, stops the game\n"
+                      f"-l, --level: load the level with the specified number\n"
+                      f"-f, --file: load the specified level file\n"
+                      f"\tonly available if `l' or `level' is not given\n"
+                      f"--fov: set the field of view in degrees (default: 90°)\n"
+                      f"--rays: set the number of rays cast (default: 90)\n"
+                      f"\tlower values can help performance on lower end systems\n")
+                logging.info("stopped")
+                return
+
+            elif argument in ("-l", "--level"):
+                if isinstance(value, int):
+                    logging.error(f"level number not an integer")
+                    print("level number must be an integer")
+                    continue
+                lv = LEVEL_PATHS[int(value)]
+                lv_sel = True
+
+            elif argument in ("-f", "--file") and not lv_sel:
+                lv = value
+
+            # TODO implement missing arguments
+            elif argument in ("--fov", "--rays"):
+                logging.info(f"not implemented argument: {argument, value}")
+                print("not implemented yet")
+
+            else:
+                logging.info(f"unknown argument: {argument, value}")
+                print(f"unknown argument: {argument, value}")
+
+    except getopt.error as err:
+        logging.fatal(str(err))
+        print(str(err))
+        return
+
     pg.init()
     screen = pg.display.set_mode(SCREEN_SIZE)
     pg.display.set_caption("Hundefels2D")
@@ -33,7 +87,7 @@ def main():
     logging.debug("initialized screen")
 
     lv = w.Level(screen)
-    pl = p.Player(screen, lv)
+    pl = p.Player(screen, lv, pos=lv.start_position)
 
     screen.fill((80, 80, 80))
     pg.display.flip()
@@ -88,6 +142,7 @@ def main():
 
         if time.time() >= t and not perf_warn:
             perf_warn = True
+            print("performance low, game may not work as intended")
             logging.warning("performance low, game may not work as intended")
 
         while time.time() < t:

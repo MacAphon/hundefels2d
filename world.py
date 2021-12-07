@@ -3,11 +3,13 @@
 # Hundefels 2D
 # a small 2.5D game by Christian Korn
 #
-# VERSION = "0.1.0"
+# VERSION = "0.1.1"
 #
 # all rights reserved
 
+import math
 import logging
+
 import pygame as pg
 
 
@@ -19,6 +21,8 @@ LEVEL = ((1, 1, 1, 1, 1, 1, 1, 1),
          (1, 0, 0, 0, 0, 1, 0, 1),
          (1, 0, 0, 0, 0, 0, 0, 1),
          (1, 1, 1, 1, 1, 1, 1, 1))
+NAME = "test"
+START_POS = (255, 255, 2*math.pi)
 
 BLOCK_SIZE = 64
 SIZE = 8
@@ -30,10 +34,14 @@ size = SCREEN_SIZE
 
 
 class Level:
-    def __init__(self, srf, pos=(0, 0)):
-        self.map = LEVEL
+    def __init__(self, srf, file=None, pos=(0, 0), start_pos=START_POS):
         self.surface = srf
+        if file is not None:
+            pass
+        else:
+            self.map = LEVEL
         self.position = pos
+        self.start_position = start_pos
 
     def draw(self):
         for y, yv in enumerate(self.map):
