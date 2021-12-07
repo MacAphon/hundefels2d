@@ -7,12 +7,13 @@
 #
 # all rights reserved
 
-import world as w
-import entity as e
-
 import math
 import logging
+
 import pygame as pg
+
+import world as w
+import entity as e
 
 
 PI_HALFS = math.pi/2
@@ -30,20 +31,22 @@ RAY_X_COLOR = (0, 255, 0)  # green
 RAY_Y_COLOR = (0, 0, 255)  # blue
 WALL_X_COLOR = (255, 0, 0)  # red
 WALL_Y_COLOR = (127, 0, 0)  # darker red
+SKY_COLOR = (127, 127, 255)  # light blue
 
 DISTANCE = 100000
 
 RAYS = 90
-FOV = PI_HALFS  # 90 degrees
 
 OFFSET_3D = 514
 WIDTH_3D = 512
 
 
 class Player(e.Entity):
-    def __init__(self, srf, lvl, pos=POS_INIT, col=COL_INIT, siz=SIZ_INIT, sta=STA_INIT):
+    def __init__(self, srf, lvl, fov=90, rays=RAYS, pos=POS_INIT, col=COL_INIT, siz=SIZ_INIT, sta=STA_INIT):
         self.surface = srf
         self.level = lvl
+        self.fov = fov*0.01745329252
+        self.rays = rays
         self.position = pos
         self.color = col
         self.size = siz
@@ -54,6 +57,7 @@ class Player(e.Entity):
         logging.info("created new Player")
 
     def draw(self):
+        pg.draw.polygon(self.surface, SKY_COLOR, ((512, 0), (1024, 0), (1024, 255), (512, 255)))
         self._cast_rays()
         pg.draw.circle(self.surface, self.color, self.position[:2], self.size)
         line_end = (self.position[0] + 4*self.size*math.cos(-self.position[2] - 0.5*math.pi),
@@ -62,9 +66,9 @@ class Player(e.Entity):
 
     def _cast_rays(self):
         ray_angle_y = (self.position[2] - math.pi / 2)
-        ray_angle_y += FOV / 2
+        ray_angle_y += self.fov / 2
 
-        for i in range(RAYS):
+        for i in range(self.rays):
 
             his0 = False
             vis0 = False
@@ -183,11 +187,9 @@ class Player(e.Entity):
 
             # First-Person Viewport
 
-            h_width = WIDTH_3D/RAYS
+            h_width = WIDTH_3D/self.rays
             h_offset = OFFSET_3D + i * h_width
             v_offset = (1 / dist+0.001)*9000
             pg.draw.line(self.surface, wall_color, (h_offset, 255-v_offset), (h_offset, 255+v_offset), int(h_width)+1)
 
-            ray_angle_y -= FOV / RAYS
-
-
+            ray_angle_y -= self.fov / self.rays

@@ -44,13 +44,13 @@ class Entity:
         pg.draw.circle(self.surface, self.color, self.position[:2], self.size)
 
     def set_state(self, x=None, y=None, r=None):
-        """ f:forward, s:sidewards (right), r:rotation (counterclockwise)
+        """ x:sidewards(right), y:forward, r:rotation (counterclockwise)
         """
         self.state = (self.state[0] + x * SPEED if x is not None else self.state[0],
                       self.state[1] + y * SPEED if y is not None else self.state[1],
                       self.state[2] + r * ROT_SPEED if r is not None else self.state[2])
 
-        logging.debug(f"player state update: {self.state} {self.position}")
+        logging.debug(f"entity state update: {type(self)} {self.state} {self.position}")
 
     def move(self):
         self.movement = self._set_move_speed()

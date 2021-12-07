@@ -20,11 +20,12 @@ import world as w
 
 SCREEN_SIZE = (1024, 512)
 
-LEVEL_PATH = "data/levels.json"
+LEVEL_PATHS = ("data/levels/lv1.json",
+               "data/levels/lv2.json")
 
 argument_list = sys.argv[1:]
-OPTIONS = "hlf:"
-LONG_OPTIONS = ("help", "level", "file", "fov", "rays")
+OPTIONS = "hl:"
+LONG_OPTIONS = ("help", "level", "fov", "rays")
 
 # noinspection PyArgumentList
 logging.basicConfig(format="%(asctime)s:%(levelname)s:%(message)s", datefmt="%H:%M:%S",
@@ -39,15 +40,15 @@ def main():
     try:
         arguments, values = getopt.getopt(argument_list, OPTIONS, LONG_OPTIONS)
         lv = None
-        lv_sel = False
+        rays = 90
+        fov = 90
         for argument, value in arguments:
             if argument in ("-h", "--help"):
                 logging.info("showing help")
                 print(f"options: -{OPTIONS[:-1]}\n"
                       f"long options: {LONG_OPTIONS}\n\n"
                       f"-h, --help: show this help, stops the game\n"
-                      f"-l, --level: load the level with the specified number\n"
-                      f"-f, --file: load the specified level file\n"
+                      f"-l, --level: load the level with the specified number or path\n"
                       f"\tonly available if `l' or `level' is not given\n"
                       f"--fov: set the field of view in degrees (default: 90°)\n"
                       f"--rays: set the number of rays cast (default: 90)\n"
@@ -56,20 +57,28 @@ def main():
                 return
 
             elif argument in ("-l", "--level"):
-                if isinstance(value, int):
-                    logging.error(f"level number not an integer")
-                    print("level number must be an integer")
+                try:
+                    lv = LEVEL_PATHS[int(value)]
+                    logging.info(f"level selected by number: {lv}")
+                except ValueError:
+                    lv = value
+                    logging.info(f"level selected by file: {lv}")
+
+            elif argument == "--fov":
+                try:
+                    fov = int(value)
+                except ValueError:
+                    logging.error(f"fov not an integer")
+                    print("fov must be an integer")
                     continue
-                lv = LEVEL_PATHS[int(value)]
-                lv_sel = True
 
-            elif argument in ("-f", "--file") and not lv_sel:
-                lv = value
-
-            # TODO implement missing arguments
-            elif argument in ("--fov", "--rays"):
-                logging.info(f"not implemented argument: {argument, value}")
-                print("not implemented yet")
+            elif argument == "--rays":
+                try:
+                    rays = int(value)
+                except ValueError:
+                    logging.error(f"rays not an integer")
+                    print("rays must be an integer")
+                    continue
 
             else:
                 logging.info(f"unknown argument: {argument, value}")
@@ -84,10 +93,10 @@ def main():
     screen = pg.display.set_mode(SCREEN_SIZE)
     pg.display.set_caption("Hundefels2D")
 
-    logging.debug("initialized screen")
+    logging.info("initialized screen")
 
     lv = w.Level(screen)
-    pl = p.Player(screen, lv, pos=lv.start_position)
+    pl = p.Player(screen, lv, rays=rays, fov=fov, pos=lv.start_position)
 
     screen.fill((80, 80, 80))
     pg.display.flip()
