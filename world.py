@@ -9,6 +9,7 @@
 
 import math
 import logging
+import json
 
 import pygame as pg
 
@@ -26,27 +27,39 @@ ENEMIES = ()
 NAME = "test"
 START_POS = (255, 255, 2*math.pi)
 
-BLOCK_SIZE = 64
 SIZE = 8
-MAP_X = 8
-MAP_Y = 8
+BLOCK_SIZE = 512/SIZE
 
 SCREEN_SIZE = (1024, 512)
 size = SCREEN_SIZE
 
 
+def _load_file(file):
+    """
+    read a JSON file and return the level data
+    :param file: String
+    :return: List, int, [int, int, int], List, List
+    """
+    logging.info(f"started reading file")
+    with open(file, "r") as file:
+        s = json.loads(file.read())
+        return s["map"], s["size"], s["start_pos"], s["entities"], s["enemies"]
+
+
 class Level:
-    def __init__(self, srf, file=None, pos=(0, 0)):
+    def __init__(self, srf, file=None):
         self.surface = srf
         if file is not None:
-            self.map, self.block_size, self.start_position, self.entities, self.enemies = self._load_file(file)
+            self.map, self.size, self.start_position, self.entities, self.enemies = _load_file(file)
+            self.start_position = (self.start_position[0], self.start_position[1], self.start_position[2]*0.01745329252)
+            self.block_size = 512/self.size
         else:
             self.map = LEVEL
             self.block_size = BLOCK_SIZE
+            self.size = SIZE
             self.start_position = START_POS
             self.entities = ENTITIES
             self.enemies = ENEMIES
-        self.position = pos
 
     def draw(self):
         for y, yv in enumerate(self.map):
@@ -57,16 +70,9 @@ class Level:
                     color = (0, 0, 0)  # black
 
                 # calculate coordinates of block vertices, add one pixel of border around them
-                positions = ((self.position[0] + x*self.block_size + 1,
-                              self.position[1] + y*self.block_size + 1),
-
-                             (self.position[0] + (x+1)*self.block_size - 1,
-                              self.position[1] + y*self.block_size + 1),
-
-                             (self.position[0] + (x+1)*self.block_size - 1,
-                              self.position[1] + (y+1)*self.block_size - 1),
-
-                             (self.position[0] + x*self.block_size + 1,
-                              self.position[1] + (y+1)*self.block_size - 1))
+                positions = ((x * self.block_size + 1, y * self.block_size + 1),
+                             ((x + 1) * self.block_size - 1, y * self.block_size + 1),
+                             ((x + 1) * self.block_size - 1, (y + 1) * self.block_size - 1),
+                             (x * self.block_size + 1, (y + 1) * self.block_size - 1))
 
                 pg.draw.polygon(self.surface, color, positions)

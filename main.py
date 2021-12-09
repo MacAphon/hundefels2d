@@ -20,8 +20,10 @@ import world as w
 
 SCREEN_SIZE = (1024, 512)
 
-LEVEL_PATHS = ("data/levels/lv1.json",
-               "data/levels/lv2.json")
+LEVEL_PATHS = (None,
+               "data/levels/lv1.json",
+               "data/levels/lv2.json",
+               "data/levels/lv3.json")
 
 argument_list = sys.argv[1:]
 OPTIONS = "hl:"
@@ -95,8 +97,8 @@ def main():
 
     logging.info("initialized screen")
 
-    lv = w.Level(screen)
-    pl = p.Player(screen, lv, rays=rays, fov=fov, pos=lv.start_position)
+    lvl = w.Level(screen, lv)
+    pl = p.Player(screen, lvl, rays=rays, fov=fov, pos=lvl.start_position)
 
     screen.fill((80, 80, 80))
     pg.display.flip()
@@ -143,7 +145,7 @@ def main():
 
         screen.fill((80, 80, 80))
 
-        lv.draw()
+        lvl.draw()
         pl.move()
         pl.draw()
 

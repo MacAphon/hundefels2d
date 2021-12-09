@@ -33,7 +33,7 @@ WALL_X_COLOR = (255, 0, 0)  # red
 WALL_Y_COLOR = (127, 0, 0)  # darker red
 SKY_COLOR = (127, 127, 255)  # light blue
 
-DISTANCE = 100000
+DISTANCE = 1000000
 
 RAYS = 90
 
@@ -60,12 +60,12 @@ class Player(e.Entity):
         pg.draw.polygon(self.surface, SKY_COLOR, ((512, 0), (1024, 0), (1024, 255), (512, 255)))
         self._cast_rays()
         pg.draw.circle(self.surface, self.color, self.position[:2], self.size)
-        line_end = (self.position[0] + 4*self.size*math.cos(-self.position[2] - 0.5*math.pi),
-                    self.position[1] + 4*self.size*math.sin(-self.position[2] - 0.5*math.pi))
+        line_end = (self.position[0] + 4*self.size*math.cos(-self.position[2] - PI_HALFS),
+                    self.position[1] + 4*self.size*math.sin(-self.position[2] - PI_HALFS))
         pg.draw.line(self.surface, self.color, self.position[:2], line_end, int(self.size/3))
 
     def _cast_rays(self):
-        ray_angle_y = (self.position[2] - math.pi / 2)
+        ray_angle_y = (self.position[2] - PI_HALFS)
         ray_angle_y += self.fov / 2
 
         for i in range(self.rays):
@@ -74,16 +74,16 @@ class Player(e.Entity):
             vis0 = False
 
             if ray_angle_y < 0:
-                ray_angle_y += 2 * math.pi
-            elif ray_angle_y > 2 * math.pi:
-                ray_angle_y -= 2 * math.pi
+                ray_angle_y += TWO_PI
+            elif ray_angle_y > TWO_PI:
+                ray_angle_y -= TWO_PI
 
             ray_angle_x = ray_angle_y + PI_HALFS
 
             if ray_angle_x < 0:
-                ray_angle_x += 2 * math.pi
-            elif ray_angle_x > 2 * math.pi:
-                ray_angle_x -= 2 * math.pi
+                ray_angle_x += TWO_PI
+            elif ray_angle_x > TWO_PI:
+                ray_angle_x -= TWO_PI
 
             atan = 1 / math.tan(ray_angle_y)
             natan = -1 / math.tan(ray_angle_x)
@@ -91,30 +91,30 @@ class Player(e.Entity):
             # vertical lines
             dof = 0
             if PI_HALFS < ray_angle_y < 1.5*math.pi:  # looking right
-                rx = (int(self.position[0] / w.BLOCK_SIZE)) * w.BLOCK_SIZE + w.BLOCK_SIZE
+                rx = (int(self.position[0] / self.level.block_size)) * self.level.block_size + self.level.block_size
                 ry = (self.position[0] - rx) * natan + self.position[1]
-                x_offset = w.BLOCK_SIZE
+                x_offset = self.level.block_size
                 y_offset = - x_offset*natan
 
             if ray_angle_y > 1.5*math.pi or PI_HALFS > ray_angle_y:  # looking left
-                rx = (int(self.position[0] / w.BLOCK_SIZE)) * w.BLOCK_SIZE
+                rx = (int(self.position[0] / self.level.block_size)) * self.level.block_size
                 ry = (self.position[0] - rx) * natan + self.position[1]
                 rx -= 1
-                x_offset = - w.BLOCK_SIZE
+                x_offset = - self.level.block_size
                 y_offset = - x_offset*natan
 
             if ray_angle_y in (PI_HALFS, 1.5*math.pi):  # looking straight up or down
                 rx = self.position[0]
                 ry = self.position[1]
                 vis0 = True
-                dof = w.SIZE
+                dof = self.level.size
 
-            while dof < w.SIZE:  # check for walls
-                mx = int(rx/64)
-                my = int(ry/64)
-                if 0 <= mx < w.SIZE and 0 <= my < w.SIZE:
+            while dof < self.level.size:  # check for walls
+                mx = int(rx/self.level.block_size)
+                my = int(ry/self.level.block_size)
+                if 0 <= mx < self.level.size and 0 <= my < self.level.size:
                     if self.level.map[my][mx] == 1:  # hit wall
-                        dof = w.SIZE
+                        dof = self.level.size
                     else:
                         rx += x_offset
                         ry += y_offset
@@ -131,30 +131,30 @@ class Player(e.Entity):
             # horizontal lines
             dof = 0
             if ray_angle_y > math.pi:  # looking up
-                ry = (int(self.position[1] / w.BLOCK_SIZE)) * w.BLOCK_SIZE
+                ry = (int(self.position[1] / self.level.block_size)) * self.level.block_size
                 rx = (self.position[1] - ry) * atan + self.position[0]
                 ry -= 1
-                y_offset = - w.BLOCK_SIZE
+                y_offset = - self.level.block_size
                 x_offset = - y_offset*atan
 
             if ray_angle_y < math.pi:  # looking down
-                ry = (int(self.position[1] / w.BLOCK_SIZE)) * w.BLOCK_SIZE + w.BLOCK_SIZE
+                ry = (int(self.position[1] / self.level.block_size)) * self.level.block_size + self.level.block_size
                 rx = (self.position[1] - ry) * atan + self.position[0]
-                y_offset = w.BLOCK_SIZE
+                y_offset = self.level.block_size
                 x_offset = - y_offset*atan
 
             if ray_angle_y in (0, math.pi, TWO_PI):  # looking straight left or right
                 rx = self.position[0]
                 ry = self.position[1]
                 his0 = True
-                dof = w.SIZE
+                dof = self.level.size
 
-            while dof < w.SIZE:  # check for walls
-                mx = int(rx/64)
-                my = int(ry/64)
-                if 0 <= mx < w.SIZE and 0 <= my < w.SIZE:
+            while dof < self.level.size:  # check for walls
+                mx = int(rx/self.level.block_size)
+                my = int(ry/self.level.block_size)
+                if 0 <= mx < self.level.size and 0 <= my < self.level.size:
                     if self.level.map[my][mx] == 1:  # hit wall
-                        dof = w.SIZE
+                        dof = self.level.size
                     else:
                         rx += x_offset
                         ry += y_offset
