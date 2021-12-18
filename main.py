@@ -3,8 +3,6 @@
 # Hundefels 2D
 # a small 2.5D game by Christian Korn
 #
-# VERSION = "0.1.1"
-#
 # all rights reserved
 
 import getopt
@@ -51,7 +49,6 @@ def main():
                       f"long options: {LONG_OPTIONS}\n\n"
                       f"-h, --help: show this help, stops the game\n"
                       f"-l, --level: load the level with the specified number or path\n"
-                      f"\tonly available if `l' or `level' is not given\n"
                       f"--fov: set the field of view in degrees (default: 90°)\n"
                       f"--rays: set the number of rays cast (default: 90)\n"
                       f"\tlower values can help performance on lower end systems\n")

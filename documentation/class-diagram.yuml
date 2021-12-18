@@ -1,0 +1,14 @@
+// hundefels2d
+// https://github.com/MacAphon/hundefels2d
+
+[__main__]-pl 1>[Player]^[Entity]
+[__main__]-lvl 1>[Level]
+[Entity]-level 1>[Level]
+
+[__main__|__+main()__]
+
+[Entity|-_surface:SurfaceType;-_position:(float, float, float);-_color:(int, int, int);-_size:int;-_state:(float, float, float);-_speed:int;-_rot_speed:float;-_movement:(float, float)|+Entity(srf:SurfaceType,lvl:Level,pos:(float, float, float)=POS_INIT,col:(int, int, int)=COL_INIT,siz:int=SIZ_INIT)≪constructor≫;+draw();+set_state(x:int=None, y:int=None, r:int=None);+move();-_set_move_speed():(float, float)]
+
+[Player|-_fov:float;-_rays:int|+Player(srf:SurfaceType,lvl:Level,fov:int=90,rays:int=RAYS,pos:(float, float, float)=POS_INIT)≪constructor≫;+draw();-_cast_rays()]
+
+[Level|-_surface:SurfaceType;+map:((int));+size:int;+start_position:(int, int);+entities:(Entity);+enemies:(Enemy);+start_position:(int, int, int);+block_size:int|+Level(srf:SurfaceType,file:string)≪constructor≫;__-_load_file(file:string):List, int, (int, int, int), List, List__;+draw()]

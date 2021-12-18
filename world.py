@@ -3,8 +3,6 @@
 # Hundefels 2D
 # a small 2.5D game by Christian Korn
 #
-# VERSION = "0.1.1"
-#
 # all rights reserved
 
 import math
@@ -43,16 +41,23 @@ def _load_file(file):
     logging.info(f"started reading file")
     with open(file, "r") as file:
         s = json.loads(file.read())
-        return s["map"], s["size"], s["start_pos"], s["entities"], s["enemies"]
+        entities = s["entities"] if "entities" in s else []
+        enemies = s["enemies"] if "enemies" in s else []
+        return s["map"], s["size"], s["start_pos"], entities, enemies
 
 
 class Level:
     def __init__(self, srf, file=None):
-        self.surface = srf
+        """
+
+        :param srf:
+        :param file:
+        """
+        self._surface = srf
         if file is not None:
             self.map, self.size, self.start_position, self.entities, self.enemies = _load_file(file)
             self.start_position = (self.start_position[0], self.start_position[1], self.start_position[2]*0.01745329252)
-            self.block_size = 512/self.size
+            self.block_size = 512 / self.size
         else:
             self.map = LEVEL
             self.block_size = BLOCK_SIZE
@@ -75,4 +80,4 @@ class Level:
                              ((x + 1) * self.block_size - 1, (y + 1) * self.block_size - 1),
                              (x * self.block_size + 1, (y + 1) * self.block_size - 1))
 
-                pg.draw.polygon(self.surface, color, positions)
+                pg.draw.polygon(self._surface, color, positions)

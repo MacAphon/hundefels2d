@@ -1,16 +1,13 @@
-\documentclass[a4paper]{article}
+\documentclass[a4paper,titlepage]{article}
 \title{CT Projekt: Raycasting engine (Hundefels 2D)}
 \author{Christian Korn}
 \date{20.10.2021 - 11.01.2022}
 
+\usepackage[ngerman]{babel}
+\usepackage{graphicx}
+
 \begin{document}
-	
-\pagenumbering{gobble}
 \maketitle
-
-\newpage
-
-\pagenumbering{arabic}
 \tableofcontents
 
 \newpage
@@ -18,7 +15,7 @@
 \section{Ziele}
 
 \subsection{Muss-Ziele}
-Wenn diese Ziele nicht ereicht werden, wird das Projekt als Fehlschlag angesehen.
+Wenn diese Ziele nicht erreicht werden, wird das Projekt als Fehlschlag angesehen.
 
 \begin{itemize}
 \item Anzeigen eines 2D Levels in 2,5D (Raycasting Methode)
@@ -26,7 +23,7 @@ Wenn diese Ziele nicht ereicht werden, wird das Projekt als Fehlschlag angesehen
 \end{itemize}
 
 \subsection{Soll-Ziele}
-Diese Ziele müssen nicht unbedingt ereicht werden, sind aber für einen vollen Erfolg nötig.
+Diese Ziele müssen nicht unbedingt erreicht werden, sind aber für einen vollen Erfolg nötig.
 
 \begin{itemize}
 \item Laden von Leveln aus Dateien
@@ -36,7 +33,6 @@ Diese Ziele müssen nicht unbedingt ereicht werden, sind aber für einen vollen 
 
 \subsection{Kann-Ziele}
 Diese Ziele sind nicht nötig, können aber nach Vollendung der Höheren Ziele in Angriff genommen werden.
-
 
 \begin{itemize}
 \item Gegner KI
@@ -79,12 +75,30 @@ Diese Ziele sind nicht nötig, können aber nach Vollendung der Höheren Ziele i
 \newpage
 
 \section{Programmaufbau}
-\subsection{geplant}
-\subsection{ausgeführt}
+\includegraphics[scale=0.35]{./img/yuml1}
 
 \newpage
 
 \section{Steuerung}
+
+\subsection{Command-Line Argumente}
+
+\begin{itemize}
+	\item \verb|-h --help| zeigt die CLI Argumente und beendet das Programm.
+	\item \verb|-l --level| lädt das angegebene Level oder die angegebene Level Datei.
+	\item \verb|--fov| ändert den Blickwinkel (angegeben in Grad) Standartwert ist 90°.
+	\item \verb|--rays| ändert die horizontale Auflösung (Anzahl der gesendeten Strahlen) Standartwert ist 90. Höhere Werte können die Leistung beeinträchtigen.
+\end{itemize}
+
+\subsection{Levelerstellung}
+Level werden im JSON-Format gespeichert.
+\begin{itemize}
+	\item \verb|"map": [[int]]| Die Map: 1 entspricht einer Wand, 0 Leerraum. Die Map muss quadratisch sein (ansonsten crasht das Programm)
+	\item \verb|"size": int| Die Größe der Map. Muss dem tatsächlichen Wert entsprechen.
+	\item \verb|"start_pos": [x: int, y: int, r: int]| Die Startposition des Spielers. X und y sind Werte zwischen 0 und 512, sie geben die Position in Pixeln an. R ist zwischen 0 und 360 und ist die Drehung in Grad.
+	\item \verb|""entities": [], "enemies": []| Enthalten aktuell keine Werte und werden für zukünftigen Gebrauch freigehalten.
+	
+\end{itemize}
 
 \subsection{Bewegung}
 
@@ -101,6 +115,9 @@ Diese Ziele sind nicht nötig, können aber nach Vollendung der Höheren Ziele i
 \item Links: linke Pfeiltaste ($\leftarrow$)
 \item Rechts: rechte Pfeiltaste ($\rightarrow$)
 \end{itemize}
+
+\subsection{UI}
+\includegraphics[scale=1.18]{./img/ui}
 
 \newpage
 

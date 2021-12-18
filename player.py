@@ -3,8 +3,6 @@
 # Hundefels 2D
 # a small 2.5D game by Christian Korn
 #
-# VERSION = "0.1.1"
-#
 # all rights reserved
 
 import math
@@ -42,33 +40,35 @@ WIDTH_3D = 512
 
 
 class Player(e.Entity):
-    def __init__(self, srf, lvl, fov=90, rays=RAYS, pos=POS_INIT, col=COL_INIT, siz=SIZ_INIT, sta=STA_INIT):
-        self.surface = srf
-        self.level = lvl
-        self.fov = fov*0.01745329252
-        self.rays = rays
-        self.position = pos
-        self.color = col
-        self.size = siz
-        self.state = sta
+    def __init__(self, srf, lvl, fov=90, rays=RAYS, pos=POS_INIT):
+        self._surface = srf
+        self._level = lvl
+        self._fov = fov * 0.01745329252
+        self._rays = rays
+        self._position = pos
+        self._color = COL_INIT
+        self._size = SIZ_INIT
+        self._state = STA_INIT
+        self._speed = SPEED
+        self._rot_speed = ROT_SPEED
 
         self.movement = self._set_move_speed()
 
         logging.info("created new Player")
 
     def draw(self):
-        pg.draw.polygon(self.surface, SKY_COLOR, ((512, 0), (1024, 0), (1024, 255), (512, 255)))
+        pg.draw.polygon(self._surface, SKY_COLOR, ((512, 0), (1024, 0), (1024, 255), (512, 255)))
         self._cast_rays()
-        pg.draw.circle(self.surface, self.color, self.position[:2], self.size)
-        line_end = (self.position[0] + 4*self.size*math.cos(-self.position[2] - PI_HALFS),
-                    self.position[1] + 4*self.size*math.sin(-self.position[2] - PI_HALFS))
-        pg.draw.line(self.surface, self.color, self.position[:2], line_end, int(self.size/3))
+        pg.draw.circle(self._surface, self._color, self._position[:2], self._size)
+        line_end = (self._position[0] + 4 * self._size * math.cos(-self._position[2] - PI_HALFS),
+                    self._position[1] + 4 * self._size * math.sin(-self._position[2] - PI_HALFS))
+        pg.draw.line(self._surface, self._color, self._position[:2], line_end, int(self._size / 3))
 
     def _cast_rays(self):
-        ray_angle_y = (self.position[2] - PI_HALFS)
-        ray_angle_y += self.fov / 2
+        ray_angle_y = (self._position[2] - PI_HALFS)
+        ray_angle_y += self._fov / 2
 
-        for i in range(self.rays):
+        for i in range(self._rays):
 
             his0 = False
             vis0 = False
@@ -91,30 +91,30 @@ class Player(e.Entity):
             # vertical lines
             dof = 0
             if PI_HALFS < ray_angle_y < 1.5*math.pi:  # looking right
-                rx = (int(self.position[0] / self.level.block_size)) * self.level.block_size + self.level.block_size
-                ry = (self.position[0] - rx) * natan + self.position[1]
-                x_offset = self.level.block_size
+                rx = (int(self._position[0] / self._level.block_size)) * self._level.block_size + self._level.block_size
+                ry = (self._position[0] - rx) * natan + self._position[1]
+                x_offset = self._level.block_size
                 y_offset = - x_offset*natan
 
             if ray_angle_y > 1.5*math.pi or PI_HALFS > ray_angle_y:  # looking left
-                rx = (int(self.position[0] / self.level.block_size)) * self.level.block_size
-                ry = (self.position[0] - rx) * natan + self.position[1]
+                rx = (int(self._position[0] / self._level.block_size)) * self._level.block_size
+                ry = (self._position[0] - rx) * natan + self._position[1]
                 rx -= 1
-                x_offset = - self.level.block_size
+                x_offset = - self._level.block_size
                 y_offset = - x_offset*natan
 
             if ray_angle_y in (PI_HALFS, 1.5*math.pi):  # looking straight up or down
-                rx = self.position[0]
-                ry = self.position[1]
+                rx = self._position[0]
+                ry = self._position[1]
                 vis0 = True
-                dof = self.level.size
+                dof = self._level.size
 
-            while dof < self.level.size:  # check for walls
-                mx = int(rx/self.level.block_size)
-                my = int(ry/self.level.block_size)
-                if 0 <= mx < self.level.size and 0 <= my < self.level.size:
-                    if self.level.map[my][mx] == 1:  # hit wall
-                        dof = self.level.size
+            while dof < self._level.size:  # check for walls
+                mx = int(rx / self._level.block_size)
+                my = int(ry / self._level.block_size)
+                if 0 <= mx < self._level.size and 0 <= my < self._level.size:
+                    if self._level.map[my][mx] == 1:  # hit wall
+                        dof = self._level.size
                     else:
                         rx += x_offset
                         ry += y_offset
@@ -131,30 +131,30 @@ class Player(e.Entity):
             # horizontal lines
             dof = 0
             if ray_angle_y > math.pi:  # looking up
-                ry = (int(self.position[1] / self.level.block_size)) * self.level.block_size
-                rx = (self.position[1] - ry) * atan + self.position[0]
+                ry = (int(self._position[1] / self._level.block_size)) * self._level.block_size
+                rx = (self._position[1] - ry) * atan + self._position[0]
                 ry -= 1
-                y_offset = - self.level.block_size
+                y_offset = - self._level.block_size
                 x_offset = - y_offset*atan
 
             if ray_angle_y < math.pi:  # looking down
-                ry = (int(self.position[1] / self.level.block_size)) * self.level.block_size + self.level.block_size
-                rx = (self.position[1] - ry) * atan + self.position[0]
-                y_offset = self.level.block_size
+                ry = (int(self._position[1] / self._level.block_size)) * self._level.block_size + self._level.block_size
+                rx = (self._position[1] - ry) * atan + self._position[0]
+                y_offset = self._level.block_size
                 x_offset = - y_offset*atan
 
             if ray_angle_y in (0, math.pi, TWO_PI):  # looking straight left or right
-                rx = self.position[0]
-                ry = self.position[1]
+                rx = self._position[0]
+                ry = self._position[1]
                 his0 = True
-                dof = self.level.size
+                dof = self._level.size
 
-            while dof < self.level.size:  # check for walls
-                mx = int(rx/self.level.block_size)
-                my = int(ry/self.level.block_size)
-                if 0 <= mx < self.level.size and 0 <= my < self.level.size:
-                    if self.level.map[my][mx] == 1:  # hit wall
-                        dof = self.level.size
+            while dof < self._level.size:  # check for walls
+                mx = int(rx / self._level.block_size)
+                my = int(ry / self._level.block_size)
+                if 0 <= mx < self._level.size and 0 <= my < self._level.size:
+                    if self._level.map[my][mx] == 1:  # hit wall
+                        dof = self._level.size
                     else:
                         rx += x_offset
                         ry += y_offset
@@ -167,8 +167,8 @@ class Player(e.Entity):
             rhx = rx
             rhy = ry
 
-            vdist = math.sqrt((rvx-self.position[0])**2+(rvy-self.position[1])**2)
-            hdist = math.sqrt((rhx-self.position[0])**2+(rhy-self.position[1])**2)
+            vdist = math.sqrt((rvx - self._position[0]) ** 2 + (rvy - self._position[1]) ** 2)
+            hdist = math.sqrt((rhx - self._position[0]) ** 2 + (rhy - self._position[1]) ** 2)
 
             if hdist > vdist and not vis0:
                 dist = vdist
@@ -183,13 +183,13 @@ class Player(e.Entity):
                 rx, ry = rvx, rvy
                 wall_color = WALL_Y_COLOR
 
-            pg.draw.line(self.surface, RAY_X_COLOR, self.position[:2], (rx, ry))  # vertical
+            pg.draw.line(self._surface, RAY_X_COLOR, self._position[:2], (rx, ry))  # vertical
 
             # First-Person Viewport
 
-            h_width = WIDTH_3D/self.rays
+            h_width = WIDTH_3D/self._rays
             h_offset = OFFSET_3D + i * h_width
             v_offset = (1 / dist+0.001)*9000
-            pg.draw.line(self.surface, wall_color, (h_offset, 255-v_offset), (h_offset, 255+v_offset), int(h_width)+1)
+            pg.draw.line(self._surface, wall_color, (h_offset, 255 - v_offset), (h_offset, 255 + v_offset), int(h_width) + 1)
 
-            ray_angle_y -= self.fov / self.rays
+            ray_angle_y -= self._fov / self._rays
