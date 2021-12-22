@@ -48,11 +48,6 @@ def _load_file(file):
 
 class Level:
     def __init__(self, srf, file=None):
-        """
-
-        :param srf:
-        :param file:
-        """
         self._surface = srf
         if file is not None:
             self.map, self.size, self.start_position, self.entities, self.enemies = _load_file(file)

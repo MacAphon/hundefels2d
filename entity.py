@@ -44,8 +44,7 @@ class Entity:
         pg.draw.circle(self._surface, self._color, self._position[:2], self._size)
 
     def set_state(self, x=None, y=None, r=None):
-        """ x:sidewards(right), y:forward, r:rotation (counterclockwise)
-        """
+        """x:sidewards(right), y:forward, r:rotation (counterclockwise)"""
         self._state = (self._state[0] + x * self._speed if x is not None else self._state[0],
                        self._state[1] + y * self._speed if y is not None else self._state[1],
                        self._state[2] + r * self._rot_speed if r is not None else self._state[2])
@@ -79,8 +78,7 @@ class Entity:
         self._position = new_pos
 
     def _set_move_speed(self):
-        """ calculate absolute movement speed from movement relative to rotation
-        """
+        """calculate absolute movement speed from movement relative to rotation"""
         x = self._state[0] * math.cos(self._position[2]) + self._state[1] * math.sin(self._position[2])
         y = self._state[1] * math.cos(self._position[2]) - self._state[0] * math.sin(self._position[2])
         return x, y

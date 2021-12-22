@@ -44,21 +44,32 @@ Diese Ziele sind nicht nötig, können aber nach Vollendung der Höheren Ziele i
 
 \newpage
 
+\section{Verwendete Technologien}
+
+\subsection{Python}
+
+Das Projekt wurde mit Python \verb|3.9.7| erstellt, müsste aber auch in späteren Versionen funktionieren.
+
+Die einzige verwendete Python-Bibliothek, die nicht Teil der Standartbibliothek ist, ist Pygame. Sie kann mit ``\verb|python3 -m pip install -U pygame --user|'' installiert werden.
+
+\subsection{Dokumentation}
+
+Die Projektdokumentation wurde mit \LaTeX erstellt,
+UML Klassendiagramme wurden mit YUML erstellt.
+\newpage
+
 \section{Mathematische Funktionsweise}
+
+Die Berechnungen werden 1 mal pro Frame ausgeführt. Idealerweise heißt das, dass sie 60 mal pro Sekunde erfolgen. wenn die Rechenleistung nicht ausreicht wird eine Warnung angezeigt.
 
 \subsection{Bewegung}
 
-\subsubsection{Drehung}
+Der aktuelle Bewegungszustand und die Position werden in den Variablen \verb|_state| und \verb|_position| gespeichert.
 
-\setlength{\unitlength}{1cm}
-\begin{picture}(4,4)
-	\put(1,2){\circle*{0.3}}
-	\put(1.2,1.8){Spieler}
-	\put(1,2){\vector(0,1){1.2}}
-	\put(1.1,3.2){Blickrichtung}
-\end{picture}
+\subsubsection*{Drehung}
 
-\subsubsection{Laufen}
+
+\subsubsection*{Laufen}
 
 \subsection{Raycasting}
 \setlength{\unitlength}{1cm}
@@ -95,14 +106,14 @@ Level werden im JSON-Format gespeichert.
 \begin{itemize}
 	\item \verb|"map": [[int]]| Die Map: 1 entspricht einer Wand, 0 Leerraum. Die Map muss quadratisch sein (ansonsten crasht das Programm)
 	\item \verb|"size": int| Die Größe der Map. Muss dem tatsächlichen Wert entsprechen.
-	\item \verb|"start_pos": [x: int, y: int, r: int]| Die Startposition des Spielers. X und y sind Werte zwischen 0 und 512, sie geben die Position in Pixeln an. R ist zwischen 0 und 360 und ist die Drehung in Grad.
-	\item \verb|""entities": [], "enemies": []| Enthalten aktuell keine Werte und werden für zukünftigen Gebrauch freigehalten.
+	\item \verb|"start_pos": [x: int, y: int, r: int]| Die Startposition des Spielers. \verb|x| und \verb|y| sind Werte zwischen 0 und 512, sie geben die Position in Pixeln an. \verb|r| ist zwischen 0 und 360 und ist die Drehung in Grad.
+	\item \verb|"entities": [], "enemies": []| Enthalten aktuell keine Werte und werden für zukünftigen Gebrauch freigehalten.
 	
 \end{itemize}
 
 \subsection{Bewegung}
 
-\subsubsection{Translation (Laufen)}
+\subsubsection*{Translation (Laufen)}
 \begin{itemize}
 \item Vorwärts: `W'
 \item Links: `A'
@@ -110,21 +121,29 @@ Level werden im JSON-Format gespeichert.
 \item Rechts: `D'
 \end{itemize}
 
-\subsubsection{Rotation}
+\subsubsection*{Rotation}
 \begin{itemize}
 \item Links: linke Pfeiltaste ($\leftarrow$)
 \item Rechts: rechte Pfeiltaste ($\rightarrow$)
 \end{itemize}
 
 \subsection{UI}
-\includegraphics[scale=1.18]{./img/ui}
+\includegraphics[scale=1.11]{./img/ui}\\
+
+Das Anzeigefenster ist 1024 auf 512 Pixel groß.
+
+Die linke Hälfte enthält die Kartenansicht. Dabei ist weiß ein Wandblock und schwarz leer. Die  Karte enthält auch den Spieler: ein gelber Kreis mit einer Linie um die Blickrichtung anzuzeigen. Die grünen Strahlen, die vom Spieler ausgehen repräsentieren die im Hintergrund berechneten Strahlen und damit das Blickfeld des Spielers.
+
+Die rechte Hälfte des Fensters ist der First-Person Viewport: Die untere Hälfte ist grau, die Obere hellblau. dazwischen sind die Wände in rot. Vertikale (in y-Richtung verlaufende) Wände sind dunkelrot, horizontale Wände Hellrot. Es können teilweise Streifen der anderen Wandfarbe gesehen werden, das kann aktuell leider nicht behoben werden.
 
 \newpage
 
 \begin{flushleft}
 \begin{thebibliography}{99}
-\bibitem{rcp} 3DSage: ~ ``Make Your Own Raycaster Part 1'' ~ https://youtu.be/gYRrGTC7GtA\\ Quellcode verfügbar unter https://github.com/3DSage/OpenGL-Raycaster\_v1
-\bibitem{pygame} Pygame tutorial: 	
+	
+\bibitem{3dsage} 3DSage: ~ ``Make Your Own Raycaster Part 1'' ~ https://youtu.be/gYRrGTC7GtA\\ Quellcode verfügbar unter https://github.com/3DSage/OpenGL-Raycaster\_v1
+
+\bibitem{pygametut} Pygame tutorial: 	https://www.pygame.org/docs/tut/MakeGames.html
 \end{thebibliography}
 \end{flushleft}
 

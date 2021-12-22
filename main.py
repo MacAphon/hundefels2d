@@ -151,7 +151,7 @@ def main():
         if time.time() >= t and not perf_warn:
             perf_warn = True
             print("performance low, game may not work as intended")
-            logging.warning("performance low, game may not work as intended")
+            logging.warning("low performance")
 
         while time.time() < t:
             continue
