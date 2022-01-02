@@ -9,13 +9,12 @@ import math
 import logging
 
 import pygame as pg
+from numba import njit
 
-import world as w
 import entity as e
 
-
-PI_HALFS = math.pi/2
-TWO_PI = math.pi*2
+PI_HALFS = math.pi / 2
+TWO_PI = math.pi * 2
 
 SPEED = 3  # pixels/frame
 ROT_SPEED = 0.08  # radians/frame
@@ -39,6 +38,135 @@ OFFSET_3D = 514
 WIDTH_3D = 512
 
 
+@njit()
+def _cast_rays(rays: int, fov: float, position: tuple, level_map: list, block_size: int, level_size: int):
+    ray_angle_y = (position[2] - PI_HALFS)
+    ray_angle_y += fov / 2
+
+    rays_list = []
+
+    for i in range(rays):
+
+        his0 = False
+        vis0 = False
+
+        if ray_angle_y < 0:
+            ray_angle_y += TWO_PI
+        elif ray_angle_y > TWO_PI:
+            ray_angle_y -= TWO_PI
+
+        ray_angle_x = ray_angle_y + PI_HALFS
+
+        if ray_angle_x < 0:
+            ray_angle_x += TWO_PI
+        elif ray_angle_x > TWO_PI:
+            ray_angle_x -= TWO_PI
+
+        atan = 1 / math.tan(ray_angle_y)
+        natan = -1 / math.tan(ray_angle_x)
+
+        # vertical lines
+        dof = 0
+        if PI_HALFS < ray_angle_y < 1.5 * math.pi:  # looking right
+            rx = (int(position[0] / block_size)) * block_size + block_size
+            ry = (position[0] - rx) * natan + position[1]
+            x_offset = block_size
+            y_offset = - x_offset * natan
+
+        if ray_angle_y > 1.5 * math.pi or PI_HALFS > ray_angle_y:  # looking left
+            rx = (int(position[0] / block_size)) * block_size
+            ry = (position[0] - rx) * natan + position[1]
+            rx -= 1
+            x_offset = - block_size
+            y_offset = - x_offset * natan
+
+        if ray_angle_y in (PI_HALFS, 1.5 * math.pi):  # looking straight up or down
+            rx = position[0]
+            ry = position[1]
+            vis0 = True
+            dof = level_size
+
+        while dof < level_size:  # check for walls
+            mx = int(rx / block_size)
+            my = int(ry / block_size)
+            if 0 <= mx < level_size and 0 <= my < level_size:
+                if level_map[my][mx] == 1:  # hit wall
+                    dof = level_size
+                else:
+                    rx += x_offset
+                    ry += y_offset
+                    dof += 1
+            else:
+                rx += x_offset
+                ry += y_offset
+                dof += 1
+
+        rvx = rx
+        rvy = ry
+
+        ########################################################################
+        # horizontal lines
+        dof = 0
+        if ray_angle_y > math.pi:  # looking up
+            ry = (int(position[1] / block_size)) * block_size
+            rx = (position[1] - ry) * atan + position[0]
+            ry -= 1
+            y_offset = - block_size
+            x_offset = - y_offset * atan
+
+        if ray_angle_y < math.pi:  # looking down
+            ry = (int(position[1] / block_size)) * block_size + block_size
+            rx = (position[1] - ry) * atan + position[0]
+            y_offset = block_size
+            x_offset = - y_offset * atan
+
+        if ray_angle_y in (0., math.pi, TWO_PI):  # looking straight left or right
+            rx = position[0]
+            ry = position[1]
+            his0 = True
+            dof = level_size
+
+        while dof < level_size:  # check for walls
+            mx = int(rx / block_size)
+            my = int(ry / block_size)
+            if 0 <= mx < level_size and 0 <= my < level_size:
+                if level_map[my][mx] == 1:  # hit wall
+                    dof = level_size
+                else:
+                    rx += x_offset
+                    ry += y_offset
+                    dof += 1
+            else:
+                rx += x_offset
+                ry += y_offset
+                dof += 1
+
+        rhx = rx
+        rhy = ry
+
+        vdist = math.sqrt((rvx - position[0]) ** 2 + (rvy - position[1]) ** 2)
+        hdist = math.sqrt((rhx - position[0]) ** 2 + (rhy - position[1]) ** 2)
+
+        if hdist > vdist and not vis0:
+            dist = vdist
+            rx, ry = rvx, rvy
+            wall_color = WALL_Y_COLOR
+        elif not his0:
+            dist = hdist
+            rx, ry = rhx, rhy
+            wall_color = WALL_X_COLOR
+        else:
+            dist = vdist
+            rx, ry = rvx, rvy
+            wall_color = WALL_Y_COLOR
+
+        ray_angle_y -= fov / rays
+
+        rays_list.append((dist, ray_angle_y, i, wall_color, (rx, ry)))
+
+    return rays_list
+
+
 class Player(e.Entity):
     def __init__(self, srf, lvl, fov=90, rays=RAYS, pos=POS_INIT):
         self._surface = srf
@@ -54,142 +182,30 @@ class Player(e.Entity):
 
         self.movement = self._set_move_speed()
 
+        # call the function once to force numba to compile it
+        _cast_rays(self._rays, self._fov, self._position,
+                   self._level.map, self._level.block_size, self._level.size)
+
         logging.info("created new Player")
 
     def draw(self):
         pg.draw.polygon(self._surface, SKY_COLOR, ((512, 0), (1024, 0), (1024, 255), (512, 255)))
-        self._cast_rays()
+        self._draw_rays(_cast_rays(self._rays, self._fov, self._position,
+                                   self._level.map, self._level.block_size, self._level.size))
         pg.draw.circle(self._surface, self._color, self._position[:2], self._size)
         line_end = (self._position[0] + 4 * self._size * math.cos(-self._position[2] - PI_HALFS),
                     self._position[1] + 4 * self._size * math.sin(-self._position[2] - PI_HALFS))
         pg.draw.line(self._surface, self._color, self._position[:2], line_end, int(self._size / 3))
 
-    def _cast_rays(self):
-        ray_angle_y = (self._position[2] - PI_HALFS)
-        ray_angle_y += self._fov / 2
-
-        for i in range(self._rays):
-
-            his0 = False
-            vis0 = False
-
-            if ray_angle_y < 0:
-                ray_angle_y += TWO_PI
-            elif ray_angle_y > TWO_PI:
-                ray_angle_y -= TWO_PI
-
-            ray_angle_x = ray_angle_y + PI_HALFS
-
-            if ray_angle_x < 0:
-                ray_angle_x += TWO_PI
-            elif ray_angle_x > TWO_PI:
-                ray_angle_x -= TWO_PI
-
-            atan = 1 / math.tan(ray_angle_y)
-            natan = -1 / math.tan(ray_angle_x)
-
-            # vertical lines
-            dof = 0
-            if PI_HALFS < ray_angle_y < 1.5*math.pi:  # looking right
-                rx = (int(self._position[0] / self._level.block_size)) * self._level.block_size + self._level.block_size
-                ry = (self._position[0] - rx) * natan + self._position[1]
-                x_offset = self._level.block_size
-                y_offset = - x_offset*natan
-
-            if ray_angle_y > 1.5*math.pi or PI_HALFS > ray_angle_y:  # looking left
-                rx = (int(self._position[0] / self._level.block_size)) * self._level.block_size
-                ry = (self._position[0] - rx) * natan + self._position[1]
-                rx -= 1
-                x_offset = - self._level.block_size
-                y_offset = - x_offset*natan
-
-            if ray_angle_y in (PI_HALFS, 1.5*math.pi):  # looking straight up or down
-                rx = self._position[0]
-                ry = self._position[1]
-                vis0 = True
-                dof = self._level.size
-
-            while dof < self._level.size:  # check for walls
-                mx = int(rx / self._level.block_size)
-                my = int(ry / self._level.block_size)
-                if 0 <= mx < self._level.size and 0 <= my < self._level.size:
-                    if self._level.map[my][mx] == 1:  # hit wall
-                        dof = self._level.size
-                    else:
-                        rx += x_offset
-                        ry += y_offset
-                        dof += 1
-                else:
-                    rx += x_offset
-                    ry += y_offset
-                    dof += 1
-
-            rvx = rx
-            rvy = ry
-
-            ########################################################################
-            # horizontal lines
-            dof = 0
-            if ray_angle_y > math.pi:  # looking up
-                ry = (int(self._position[1] / self._level.block_size)) * self._level.block_size
-                rx = (self._position[1] - ry) * atan + self._position[0]
-                ry -= 1
-                y_offset = - self._level.block_size
-                x_offset = - y_offset*atan
-
-            if ray_angle_y < math.pi:  # looking down
-                ry = (int(self._position[1] / self._level.block_size)) * self._level.block_size + self._level.block_size
-                rx = (self._position[1] - ry) * atan + self._position[0]
-                y_offset = self._level.block_size
-                x_offset = - y_offset*atan
-
-            if ray_angle_y in (0, math.pi, TWO_PI):  # looking straight left or right
-                rx = self._position[0]
-                ry = self._position[1]
-                his0 = True
-                dof = self._level.size
-
-            while dof < self._level.size:  # check for walls
-                mx = int(rx / self._level.block_size)
-                my = int(ry / self._level.block_size)
-                if 0 <= mx < self._level.size and 0 <= my < self._level.size:
-                    if self._level.map[my][mx] == 1:  # hit wall
-                        dof = self._level.size
-                    else:
-                        rx += x_offset
-                        ry += y_offset
-                        dof += 1
-                else:
-                    rx += x_offset
-                    ry += y_offset
-                    dof += 1
-
-            rhx = rx
-            rhy = ry
-
-            vdist = math.sqrt((rvx - self._position[0]) ** 2 + (rvy - self._position[1]) ** 2)
-            hdist = math.sqrt((rhx - self._position[0]) ** 2 + (rhy - self._position[1]) ** 2)
-
-            if hdist > vdist and not vis0:
-                dist = vdist
-                rx, ry = rvx, rvy
-                wall_color = WALL_Y_COLOR
-            elif not his0:
-                dist = hdist
-                rx, ry = rhx, rhy
-                wall_color = WALL_X_COLOR
-            else:
-                dist = vdist
-                rx, ry = rvx, rvy
-                wall_color = WALL_Y_COLOR
-
-            pg.draw.line(self._surface, RAY_X_COLOR, self._position[:2], (rx, ry))  # vertical
+    def _draw_rays(self, rays):
+        for ray in rays:
+            dist, angle, i, wall_color, r_end = ray
+            pg.draw.line(self._surface, RAY_X_COLOR, self._position[:2], r_end)  # map ray
 
             # First-Person Viewport
 
-            h_width = WIDTH_3D/self._rays
+            h_width = WIDTH_3D / self._rays
             h_offset = OFFSET_3D + i * h_width
-            v_offset = (1 / dist+0.001)*9000
-            pg.draw.line(self._surface, wall_color, (h_offset, 255 - v_offset), (h_offset, 255 + v_offset), int(h_width) + 1)
-
-            ray_angle_y -= self._fov / self._rays
+            v_offset = (1 / dist + 0.001) * 9000
+            pg.draw.line(self._surface, wall_color, (h_offset, 255 - v_offset), (h_offset, 255 + v_offset),
+                         int(h_width) + 1)
