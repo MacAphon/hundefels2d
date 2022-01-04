@@ -37,8 +37,11 @@ RAYS = 90
 OFFSET_3D = 514
 WIDTH_3D = 512
 
+VIEWPORT_CLIP = pg.Rect(512, 0, 512, 512)
 
-@njit()
+
+# function is outside of the class to work around limitations of numba
+@njit()  # make the function run a lot faster by using just in time compilation
 def _cast_rays(rays: int, fov: float, position: tuple, level_map: list, block_size: int, level_size: int):
     ray_angle_y = (position[2] - PI_HALFS)
     ray_angle_y += fov / 2
@@ -144,7 +147,8 @@ def _cast_rays(rays: int, fov: float, position: tuple, level_map: list, block_si
         rhx = rx
         rhy = ry
 
-        vdist = math.sqrt((rvx - position[0]) ** 2 + (rvy - position[1]) ** 2)
+        # calculate the shorter distance
+        vdist = math.sqrt((rvx - position[0]) ** 2 + (rvy - position[1]) ** 2)  # pythagoras
         hdist = math.sqrt((rhx - position[0]) ** 2 + (rhy - position[1]) ** 2)
 
         if hdist > vdist and not vis0:
@@ -160,10 +164,9 @@ def _cast_rays(rays: int, fov: float, position: tuple, level_map: list, block_si
             rx, ry = rvx, rvy
             wall_color = WALL_Y_COLOR
 
-        ray_angle_y -= fov / rays
-
         rays_list.append((dist, ray_angle_y, i, wall_color, (rx, ry)))
 
+        ray_angle_y -= fov / rays
     return rays_list
 
 
@@ -171,7 +174,7 @@ class Player(e.Entity):
     def __init__(self, srf, lvl, fov=90, rays=RAYS, pos=POS_INIT):
         self._surface = srf
         self._level = lvl
-        self._fov = fov * 0.01745329252
+        self._fov = fov * 0.01745329252  # convert degrees to radians
         self._rays = rays
         self._position = pos
         self._color = COL_INIT
@@ -188,16 +191,26 @@ class Player(e.Entity):
 
         logging.info("created new Player")
 
-    def draw(self):
-        pg.draw.polygon(self._surface, SKY_COLOR, ((512, 0), (1024, 0), (1024, 255), (512, 255)))
+    def draw(self, entities):
+
+        pg.draw.polygon(self._surface, SKY_COLOR, ((512, 0), (1024, 0), (1024, 255), (512, 255)))  # sky
+
         self._draw_rays(_cast_rays(self._rays, self._fov, self._position,
-                                   self._level.map, self._level.block_size, self._level.size))
-        pg.draw.circle(self._surface, self._color, self._position[:2], self._size)
+                                   self._level.map, self._level.block_size, self._level.size),
+                        VIEWPORT_CLIP)
+
+        pg.draw.circle(self._surface, self._color, self._position[:2], self._size)  # player circle
+        # line showing where the player is looking
         line_end = (self._position[0] + 4 * self._size * math.cos(-self._position[2] - PI_HALFS),
                     self._position[1] + 4 * self._size * math.sin(-self._position[2] - PI_HALFS))
         pg.draw.line(self._surface, self._color, self._position[:2], line_end, int(self._size / 3))
 
-    def _draw_rays(self, rays):
+        for entity in entities:
+            entity.draw()
+
+    def _draw_rays(self, rays, clip):
+        self._surface.set_clip(clip)  # only draw in the viewport
+
         for ray in rays:
             dist, angle, i, wall_color, r_end = ray
             pg.draw.line(self._surface, RAY_X_COLOR, self._position[:2], r_end)  # map ray
@@ -209,3 +222,5 @@ class Player(e.Entity):
             v_offset = (1 / dist + 0.001) * 9000
             pg.draw.line(self._surface, wall_color, (h_offset, 255 - v_offset), (h_offset, 255 + v_offset),
                          int(h_width) + 1)
+
+        self._surface.set_clip(None)

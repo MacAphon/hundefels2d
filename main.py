@@ -15,8 +15,10 @@ from pygame.locals import *
 
 import player as p
 import world as w
+import world_object as wo
 
-SCREEN_SIZE = (1024, 512)
+SCREEN_SIZE_FP = (1024, 512)
+SCREEN_SIZE_MAP = (512, 512)
 
 LEVEL_PATHS = (None,
                "data/levels/lv1.json",
@@ -89,13 +91,15 @@ def main():
         return
 
     pg.init()
-    screen = pg.display.set_mode(SCREEN_SIZE)
+    screen = pg.display.set_mode(SCREEN_SIZE_FP)
     pg.display.set_caption("Hundefels2D")
 
     logging.info("initialized screen")
 
     lvl = w.Level(screen, lv)
     pl = p.Player(screen, lvl, rays=rays, fov=fov, pos=lvl.start_position)
+
+    entities = [wo.WorldObject(screen, position) for position in lvl.entities]
 
     screen.fill((80, 80, 80))
     pg.display.flip()
@@ -107,6 +111,7 @@ def main():
 
     while 1:
         t = time.time() + 1/60
+        t_warn = time.time() + 1/50
 
         for event in pg.event.get():
             if event.type == QUIT:
@@ -144,17 +149,17 @@ def main():
 
         lvl.draw()
         pl.move()
-        pl.draw()
+        pl.draw(entities)
 
         pg.display.flip()
 
-        if time.time() >= t and not perf_warn:
+        if time.time() >= t_warn and not perf_warn:
             perf_warn = True
             print("performance low, game may not work as intended")
             logging.warning("low performance")
 
         while time.time() < t:
-            continue
+            time.sleep(1/240)
 
 
 if __name__ == '__main__':

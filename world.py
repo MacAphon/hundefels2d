@@ -35,8 +35,6 @@ size = SCREEN_SIZE
 def _load_file(file):
     """
     read a JSON file and return the level data
-    :param file: String
-    :return: List, int, [int, int, int], List, List
     """
     logging.info(f"started reading file")
     with open(file, "r") as file:
@@ -60,6 +58,11 @@ class Level:
             self.start_position = START_POS
             self.entities = ENTITIES
             self.enemies = ENEMIES
+
+        # convert map to a tuple of tuples to avoid problems with numba
+        for row in self.map:
+            row = tuple(row)
+        self.map = tuple(self.map)
 
     def draw(self):
         for y, yv in enumerate(self.map):
