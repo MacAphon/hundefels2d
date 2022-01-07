@@ -50,14 +50,29 @@ Diese Ziele sind nicht nötig, können aber nach Vollendung der Höheren Ziele i
 
 Das Projekt wurde mit Python \verb|3.9.7| erstellt, müsste aber auch in späteren Versionen funktionieren.
 
-Die einzige verwendete Python-Bibliothek, die nicht Teil der Standartbibliothek ist, ist Pygame. Sie kann mit ``\verb|python3 -m pip install -U pygame --user|'' installiert werden.
+\subsubsection*{Externe Libraries}
+
+\begin{itemize}
+	\item Pygame: Installation mit ``\verb|pip install pygame|''
+	Verwendet für Darstellung.
+	\item Numba: Installation mit ``\verb|pip install numba|''
+	Für `magische' Leistungsverbesserungen von besonders aufwändigen Funktionen durch JIT-Compilierung.
+\end{itemize}
+
+\subsubsection*{IDE}
+
+Es wurde die PyCharm Community Edition verwendet.
 
 \subsection{Dokumentation}
 
 Die Projektdokumentation wurde mit \LaTeX erstellt,
 UML Klassendiagramme wurden mit YUML erstellt.
-\newpage
 
+\subsection{Versionskontrollsystem}
+
+Ein GIT Repository wurde angelegt. Es kann unter \verb|https://github.com/MacAphon/hundefels2d| gefunden werden.
+
+\newpage
 \section{Mathematische Funktionsweise}
 
 Die Berechnungen werden 1 mal pro Frame ausgeführt. Idealerweise heißt das, dass sie 60 mal pro Sekunde erfolgen. wenn die Rechenleistung nicht ausreicht wird eine Warnung angezeigt.
@@ -68,20 +83,58 @@ Der aktuelle Bewegungszustand und die Position werden in den Variablen \verb|_st
 
 \subsubsection*{Drehung}
 
+Solange $\leftarrow$ oder $\rightarrow$ gedrückt werden wird der
+
 
 \subsubsection*{Laufen}
 
-\subsection{Raycasting}
+\subsection{Darstellung}
 \setlength{\unitlength}{1cm}
+Horizontaler Check
+\\
 \begin{picture}(5,4)
+	% Gitternetz
 	\multiput(0,0)(1,0){6}{\line(0,1){4}}
+	\linethickness{0.4mm}
 	\multiput(0,0)(0,1){5}{\line(1,0){5}}
+	\thinlines
+	% Wand
 	\multiput(0,0)(0.1,0){50}{\line(0,1){1}}
+	% Spieler und Sichtlinie
 	\put(1,3){\circle*{0.3}}
 	\thicklines
-	\put(1,3){\vector(3,-2){3}}
+	\put(1,3){\vector(4,-3){2.7}}
+	% Kreuzpunkte
+	\linethickness{0.6mm}
+	\put(2.35,1.75){\line(0,1){0.5}}
+	\put(2.1,2){\line(1,0){0.5}}
+	\put(3.68,0.75){\line(0,1){0.5}}
+	\put(3.43,1){\line(1,0){0.5}}
 \end{picture}
-
+\\
+Vertikaler Check
+\\
+\begin{picture}(5,4)
+	% Gitternetz
+	\linethickness{0.4mm}
+	\multiput(0,0)(1,0){6}{\line(0,1){4}}
+	\thinlines
+	\multiput(0,0)(0,1){5}{\line(1,0){5}}
+	% Wand
+	\multiput(0,0)(0.1,0){50}{\line(0,1){1}}
+	% Spieler und Sichtlinie
+	\put(1,3){\circle*{0.3}}
+	\thicklines
+	\put(1,3){\vector(4,-3){3}}
+	% Kreuzpunkte
+	\linethickness{0.6mm}
+	\put(2,2){\line(0,1){0.5}}
+	\put(1.75,2.25){\line(1,0){0.5}}
+	\put(3,1.25){\line(0,1){0.5}}
+	\put(2.75,1.5){\line(1,0){0.5}}
+	\put(4,0.5){\line(0,1){0.5}}
+	\put(3.75,0.75){\line(1,0){0.5}}
+\end{picture}
 
 \newpage
 

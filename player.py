@@ -38,6 +38,7 @@ OFFSET_3D = 514
 WIDTH_3D = 512
 
 VIEWPORT_CLIP = pg.Rect(512, 0, 512, 512)
+MAP_CLIP = pg.Rect(0, 0, 512, 512)
 
 
 # function is outside of the class to work around limitations of numba
@@ -169,6 +170,8 @@ def _cast_rays(rays: int, fov: float, position: tuple, level_map: list, block_si
         ray_angle_y -= fov / rays
     return rays_list
 
+##############################################################################
+
 
 class Player(e.Entity):
     def __init__(self, srf, lvl, fov=90, rays=RAYS, pos=POS_INIT):
@@ -176,7 +179,7 @@ class Player(e.Entity):
         self._level = lvl
         self._fov = fov * 0.01745329252  # convert degrees to radians
         self._rays = rays
-        self._position = pos
+        self.position = pos
         self._color = COL_INIT
         self._size = SIZ_INIT
         self._state = STA_INIT
@@ -186,7 +189,7 @@ class Player(e.Entity):
         self.movement = self._set_move_speed()
 
         # call the function once to force numba to compile it
-        _cast_rays(self._rays, self._fov, self._position,
+        _cast_rays(self._rays, self._fov, self.position,
                    self._level.map, self._level.block_size, self._level.size)
 
         logging.info("created new Player")
@@ -195,32 +198,85 @@ class Player(e.Entity):
 
         pg.draw.polygon(self._surface, SKY_COLOR, ((512, 0), (1024, 0), (1024, 255), (512, 255)))  # sky
 
-        self._draw_rays(_cast_rays(self._rays, self._fov, self._position,
+        self._draw_rays(_cast_rays(self._rays, self._fov, self.position,
                                    self._level.map, self._level.block_size, self._level.size),
-                        VIEWPORT_CLIP)
+                        VIEWPORT_CLIP, MAP_CLIP, entities)
 
-        pg.draw.circle(self._surface, self._color, self._position[:2], self._size)  # player circle
+        pg.draw.circle(self._surface, self._color, self.position[:2], self._size)  # player circle
         # line showing where the player is looking
-        line_end = (self._position[0] + 4 * self._size * math.cos(-self._position[2] - PI_HALFS),
-                    self._position[1] + 4 * self._size * math.sin(-self._position[2] - PI_HALFS))
-        pg.draw.line(self._surface, self._color, self._position[:2], line_end, int(self._size / 3))
+        line_end = (self.position[0] + 4 * self._size * math.cos(-self.position[2] - PI_HALFS),
+                    self.position[1] + 4 * self._size * math.sin(-self.position[2] - PI_HALFS))
+        pg.draw.line(self._surface, self._color, self.position[:2], line_end, int(self._size / 3))
 
         for entity in entities:
             entity.draw()
 
-    def _draw_rays(self, rays, clip):
-        self._surface.set_clip(clip)  # only draw in the viewport
+    def _entity_viewport_position(self, entity):
 
-        for ray in rays:
-            dist, angle, i, wall_color, r_end = ray
-            pg.draw.line(self._surface, RAY_X_COLOR, self._position[:2], r_end)  # map ray
+        dist = math.dist(self.position[:2], entity.position[:2])
 
-            # First-Person Viewport
+        a = (self.position[0]-entity.position[0])  # delta x
+        a += 0.00001 if a == 0 else 0  # make a != 0
+        abs_angle = math.atan((self.position[1]-entity.position[1])/a)  # atan(delta y/delta x)
 
-            h_width = WIDTH_3D / self._rays
-            h_offset = OFFSET_3D + i * h_width
-            v_offset = (1 / dist + 0.001) * 9000
-            pg.draw.line(self._surface, wall_color, (h_offset, 255 - v_offset), (h_offset, 255 + v_offset),
-                         int(h_width) + 1)
+        rel_angle = self.position[2] + abs_angle
+        if a <= 0:  # keep the entity "in place" when to the left of it
+            rel_angle += math.pi
+        rel_angle = rel_angle - TWO_PI if rel_angle > TWO_PI else rel_angle  # keep rel_angle below 2*pi
+        rel_angle = rel_angle + TWO_PI if rel_angle < 0 else rel_angle  # keep rel_angle above 0
 
-        self._surface.set_clip(None)
+        rel_angle += self._fov/2
+
+        return dist, (rel_angle / self._fov) * 512
+
+    def _draw_rays(self, rays, viewport_clip, map_clip, entities):
+
+        vp_positions = [(self._entity_viewport_position(entity), entity) for entity in entities]
+        vp_positions.sort()  # sort by distance
+        vp_positions.reverse()  # furthest entity first
+
+        rendered_rays = []
+
+        for entity in vp_positions:  # draw everything behind the entity that has not yet been rendered
+            (e_dist, e_pos), e_vals = entity
+            for ray in rays:
+                if ray[0] > e_dist and ray not in rendered_rays:
+                    self._surface.set_clip(map_clip)  # only draw in the map
+
+                    dist, angle, i, color, r_end = ray
+
+                    pg.draw.line(self._surface, RAY_X_COLOR, self.position[:2], r_end)  # map ray
+
+                    # First-Person Viewport
+                    self._surface.set_clip(viewport_clip)  # only draw in the viewport
+
+                    h_width = WIDTH_3D / self._rays
+                    h_offset = OFFSET_3D + i * h_width
+                    v_offset = (1 / dist + 0.001) * 9000
+                    pg.draw.line(self._surface, color, (h_offset, 255 - v_offset),
+                                 (h_offset, 255 + v_offset), int(h_width) + 1)
+
+                    pg.draw.circle(self._surface, e_vals.color, (e_pos, 256), 10000 / e_dist)
+
+                    self._surface.set_clip(None)
+                    rendered_rays.append(ray)
+                else:
+                    continue
+
+        for ray in rays:  # fraw everything in front of all entities
+            if ray not in rendered_rays:
+                self._surface.set_clip(map_clip)  # only draw in the map
+
+                dist, angle, i, wall_color, r_end = ray
+                pg.draw.line(self._surface, RAY_X_COLOR, self.position[:2], r_end)  # map ray
+
+                # First-Person Viewport
+                self._surface.set_clip(viewport_clip)  # only draw in the viewport
+                h_width = WIDTH_3D / self._rays
+                h_offset = OFFSET_3D + i * h_width
+                v_offset = (1 / dist + 0.001) * 9000
+                pg.draw.line(self._surface, wall_color, (h_offset, 255 - v_offset), (h_offset, 255 + v_offset),
+                             int(h_width) + 1)
+
+                self._surface.set_clip(None)
+
