@@ -75,6 +75,24 @@ class Entity:
         elif new_pos[1] > w.size[1]:
             new_pos = new_pos[0], w.size[1], new_pos[2]
 
+        # collision check
+        A = 11
+        B = 53
+        if self._level.map[int(new_pos[1]/64)][int(new_pos[0]/64)] != 0:
+
+            p_chk_v = new_pos[0] - math.floor(new_pos[0]/64)*64  # amount of intrusion into blocks
+            p_chk_h = new_pos[1] - math.floor(new_pos[1] / 64) * 64
+            # vertical
+            if p_chk_h < p_chk_v < A or p_chk_v < A < p_chk_h:
+                new_pos = new_pos[0] - p_chk_v, new_pos[1], new_pos[2]
+            elif p_chk_h > p_chk_v > B or p_chk_v > B > p_chk_h:
+                new_pos = new_pos[0] + p_chk_v - B, new_pos[1], new_pos[2]
+            # horizontal
+            elif p_chk_v < p_chk_h < A or p_chk_h < A < p_chk_v:
+                new_pos = new_pos[0], new_pos[1] - p_chk_h, new_pos[2]
+            elif p_chk_v > p_chk_h > B or p_chk_h > B > p_chk_v:
+                new_pos = new_pos[0], new_pos[1] + p_chk_h - B, new_pos[2]
+
         self.position = new_pos
 
     def _set_move_speed(self):

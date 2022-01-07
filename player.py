@@ -230,7 +230,9 @@ class Player(e.Entity):
         return dist, (rel_angle / self._fov) * 512
 
     def _draw_rays(self, rays, viewport_clip, map_clip, entities):
-
+        """
+        draws rays and entities
+        """
         vp_positions = [(self._entity_viewport_position(entity), entity) for entity in entities]
         vp_positions.sort()  # sort by distance
         vp_positions.reverse()  # furthest entity first
@@ -240,43 +242,35 @@ class Player(e.Entity):
         for entity in vp_positions:  # draw everything behind the entity that has not yet been rendered
             (e_dist, e_pos), e_vals = entity
             for ray in rays:
-                if ray[0] > e_dist and ray not in rendered_rays:
-                    self._surface.set_clip(map_clip)  # only draw in the map
-
-                    dist, angle, i, color, r_end = ray
-
-                    pg.draw.line(self._surface, RAY_X_COLOR, self.position[:2], r_end)  # map ray
-
-                    # First-Person Viewport
-                    self._surface.set_clip(viewport_clip)  # only draw in the viewport
-
-                    h_width = WIDTH_3D / self._rays
-                    h_offset = OFFSET_3D + i * h_width
-                    v_offset = (1 / dist + 0.001) * 9000
-                    pg.draw.line(self._surface, color, (h_offset, 255 - v_offset),
-                                 (h_offset, 255 + v_offset), int(h_width) + 1)
-
-                    pg.draw.circle(self._surface, e_vals.color, (e_pos, 256), 10000 / e_dist)
-
-                    self._surface.set_clip(None)
+                if ray[0] >= e_dist and ray not in rendered_rays:
+                    self._draw_ray(ray, map_clip, viewport_clip)
                     rendered_rays.append(ray)
                 else:
                     continue
 
+            self._surface.set_clip(viewport_clip)  # only draw in the viewport
+            pg.draw.circle(self._surface, e_vals.color, (e_pos, 256), 10000 / e_dist)  # draw the entity
+            self._surface.set_clip(None)
+
         for ray in rays:  # fraw everything in front of all entities
             if ray not in rendered_rays:
-                self._surface.set_clip(map_clip)  # only draw in the map
+                self._draw_ray(ray, map_clip, viewport_clip)
 
-                dist, angle, i, wall_color, r_end = ray
-                pg.draw.line(self._surface, RAY_X_COLOR, self.position[:2], r_end)  # map ray
+    def _draw_ray(self, ray, map_clip, viewport_clip):
+        """
+        draws a single ray
+        """
+        self._surface.set_clip(map_clip)  # only draw in the map
 
-                # First-Person Viewport
-                self._surface.set_clip(viewport_clip)  # only draw in the viewport
-                h_width = WIDTH_3D / self._rays
-                h_offset = OFFSET_3D + i * h_width
-                v_offset = (1 / dist + 0.001) * 9000
-                pg.draw.line(self._surface, wall_color, (h_offset, 255 - v_offset), (h_offset, 255 + v_offset),
-                             int(h_width) + 1)
+        dist, angle, i, wall_color, r_end = ray
+        pg.draw.line(self._surface, RAY_X_COLOR, self.position[:2], r_end)  # map ray
 
-                self._surface.set_clip(None)
+        # First-Person Viewport
+        self._surface.set_clip(viewport_clip)  # only draw in the viewport
+        h_width = WIDTH_3D / self._rays
+        h_offset = OFFSET_3D + i * h_width
+        v_offset = (1 / dist + 0.001) * 9000
+        pg.draw.line(self._surface, wall_color, (h_offset, 255 - v_offset), (h_offset, 255 + v_offset),
+                     int(h_width) + 1)
 
+        self._surface.set_clip(None)

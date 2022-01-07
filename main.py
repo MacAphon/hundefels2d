@@ -27,8 +27,7 @@ LEVEL_PATHS = (None,
 
 argument_list = sys.argv[1:]
 OPTIONS = "hl:"
-LONG_OPTIONS = ("help", "level", "fov", "rays")
-
+LONG_OPTIONS = ("help", "level=", "fov=", "rays=")
 # noinspection PyArgumentList
 logging.basicConfig(format="%(asctime)s:%(levelname)s:%(message)s", datefmt="%H:%M:%S",
                     filename="hf2d.log", encoding="utf-8", filemode="w", level=logging.DEBUG)
@@ -45,6 +44,7 @@ def main():
         rays = 90
         fov = 90
         for argument, value in arguments:
+            logging.info(f"{argument=} {value=}")
             if argument in ("-h", "--help"):
                 logging.info("showing help")
                 print(f"options: -{OPTIONS[:-1]}\n"
