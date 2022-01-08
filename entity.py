@@ -43,6 +43,9 @@ class Entity:
     def draw(self):
         pg.draw.circle(self._surface, self.color, self.position[:2], self._size)
 
+    def draw_viewport(self, distance, position):
+        pg.draw.circle(self._surface, self.color, (position, 256), 10000 / distance)
+
     def set_state(self, x=None, y=None, r=None):
         """x:sidewards(right), y:forward, r:rotation (counterclockwise)"""
         self._state = (self._state[0] + x * self._speed if x is not None else self._state[0],
@@ -84,14 +87,14 @@ class Entity:
             p_chk_h = new_pos[1] - math.floor(new_pos[1] / 64) * 64
             # vertical
             if p_chk_h < p_chk_v < A or p_chk_v < A < p_chk_h:
-                new_pos = new_pos[0] - p_chk_v, new_pos[1], new_pos[2]
+                new_pos = new_pos[0] - p_chk_v+1, new_pos[1], new_pos[2]
             elif p_chk_h > p_chk_v > B or p_chk_v > B > p_chk_h:
-                new_pos = new_pos[0] + p_chk_v - B, new_pos[1], new_pos[2]
+                new_pos = new_pos[0] + p_chk_v - B-1, new_pos[1], new_pos[2]
             # horizontal
             elif p_chk_v < p_chk_h < A or p_chk_h < A < p_chk_v:
-                new_pos = new_pos[0], new_pos[1] - p_chk_h, new_pos[2]
+                new_pos = new_pos[0], new_pos[1] - p_chk_h+1, new_pos[2]
             elif p_chk_v > p_chk_h > B or p_chk_h > B > p_chk_v:
-                new_pos = new_pos[0], new_pos[1] + p_chk_h - B, new_pos[2]
+                new_pos = new_pos[0], new_pos[1] + p_chk_h - B-1, new_pos[2]
 
         self.position = new_pos
 

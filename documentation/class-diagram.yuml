@@ -1,14 +1,59 @@
 // hundefels2d
 // https://github.com/MacAphon/hundefels2d
 
+// ≪constructor≫
+
+// final - 63a614a - 2022-01-07
 [__main__]-pl 1>[Player]^[Entity]
 [__main__]-lvl 1>[Level]
 [Entity]-level 1>[Level]
+[__main__]-entities ..>[WorldObject]^[Entity]
 
 [__main__|__+main()__]
 
-[Entity|-_surface:SurfaceType;-_position:(float, float, float);-_color:(int, int, int);-_size:int;-_state:(float, float, float);-_speed:int;-_rot_speed:float;-_movement:(float, float)|+Entity(srf:SurfaceType,lvl:Level,pos:(float, float, float)=POS_INIT,col:(int, int, int)=COL_INIT,siz:int=SIZ_INIT)≪constructor≫;+draw();+set_state(x:int=None, y:int=None, r:int=None);+move();-_set_move_speed():(float, float)]
+[Entity|-_surface:pygame.SurfaceType;+position:(float, float, float);+color:(int, int, int);-_size:int;-_state:(float, float, float);-_speed:int;-_rot_speed:float;-_movement:(float, float)|+Entity(srf:pygame.SurfaceType,lvl:Level,pos:(float, float, float)=POS_INIT,col:(int, int, int)=COL_INIT,siz:int=SIZ_INIT)≪constructor≫;+draw();+draw_viewport(distance:float,position:int);+set_state(x:int=None, y:int=None, r:int=None);+move();-_set_move_speed():(float, float)]
 
-[Player|-_fov:float;-_rays:int|+Player(srf:SurfaceType,lvl:Level,fov:int=90,rays:int=RAYS,pos:(float, float, float)=POS_INIT)≪constructor≫;+draw();-_cast_rays()]
+[Player|-_fov:float;-_rays:int|+Player(srf:pygame.SurfaceType,lvl:Level,fov:int=90,rays:int=RAYS,pos:(float, float, float)=POS_INIT)≪constructor≫;+draw();__-_cast_rays(rays:int,fov:float,position:(float,float,float)level_map:((int)),block_size:int,level_size:int):(float,float,int,(int,int,int),(float,float))__;-_entity_viewport_position(entity):(float,float);-_draw_rays(rays:((float,float,int,(int,int,int),(float,float))),viewport_clip:pygame.rect,map_clip:pygame.rect,entities:(Entity));_draw_ray(ray:(float,float,int,(int,int,int),(float,float)),map_clip:pygame.rect,viewport_clip:pygame.rect)]
 
-[Level|-_surface:SurfaceType;+map:((int));+size:int;+start_position:(int, int);+entities:(Entity);+enemies:(Enemy);+start_position:(int, int, int);+block_size:int|+Level(srf:SurfaceType,file:string)≪constructor≫;__-_load_file(file:string):List, int, (int, int, int), List, List__;+draw()]
+[Level|-_surface:pygame.SurfaceType;+map:((int));+size:int;+start_position:(int, int);+entities:(Entity);+enemies:(Enemy);+start_position:(int, int, int);+block_size:int|+Level(srf:pygame.SurfaceType,file:string)≪constructor≫;__-_load_file(file:string):List, int, (int, int, int), List, List__;+draw()]
+
+// 1 - b71a721 - 2021-11-18
+[__main__]-pl 1>[Player]
+
+[__main__|__+main()__]
+
+[Player|+surface:pygame.SurfaceType;+position:(float,float);+color:(int,int,int);+size:int;state:(float,float)|+Player(srf:pygame.SurfaceType,pos:(float,float)=POS_INIT,col:(int,int,int)=COL_INIT,siz:int=SIZ_INIT,sta:(float,float)=STA_INIT)≪constructor≫;+draw();+set_state(x:float=None,y:float=None);+move()]
+
+// 2 - 32c2bb7 - 2021-11-23
+[__main__]-pl 1>[Player]
+[__main__]-lv 1>[Level]
+
+[__main__|__+main()__]
+
+[Player|+surface:pygame.SurfaceType;+position:(float,float);+color:(int,int,int);+size:int;state:(float,float)|+Player(srf:pygame.SurfaceType,pos:(float,float)=POS_INIT,col:(int,int,int)=COL_INIT,siz:int=SIZ_INIT,sta:(float,float)=STA_INIT)≪constructor≫;+draw();+set_state(x:float=None,y:float=None);+move()]
+
+[Level|+map:((int));+surface:pygame.SurfaceType;+position:(int,int)|+Level(srf:pygame.SurfaceType),pos:(int,int)=(0,0)]
+
+// 3 - 0b2dbdc - 2021-12-02
+[__main__]-pl 1>[Player]
+[__main__]-lv 1>[Level]
+[Player]-lvl 1>[Level]
+
+[__main__|__+main()__]
+
+[Player|+surface:pygame.SurfaceType;+position:(float,float,float);+color:(int,int,int);+size:int;state:(float,float);movement:(float,float,float)|+Player(srf:pygame.SurfaceType,lvl:Level,pos:(float,float)=POS_INIT,col:(int,int,int)=COL_INIT,siz:int=SIZ_INIT,sta:(float,float)=STA_INIT)≪constructor≫;+draw();-_cast_rays();+set_state(x:float=None,y:float=None);+move()]
+
+[Level|+map:((int));+surface:pygame.SurfaceType;+position:(int,int)|+Level(srf:pygame.SurfaceType),pos:(int,int)=(0,0)]
+
+// 4 - 4a108040 - 2021-12-09
+[__main__]-pl 1>[Player]^[Entity]
+[__main__]-lvl 1>[Level]
+[Entity]-lvl 1>[Level]
+
+[__main__|__+main()__]
+
+[Player|+surface:pygame.SurfaceType;+fov:float;rays:int;+position:(float,float,float);+color:(int,int,int);+size:int;state:(float,float);movement:(float,float,float)|+Player(srf:pygame.SurfaceType,lvl:Level,fov:float=90;rays:int=RAYS,pos:(float,float)=POS_INIT,col:(int,int,int)=COL_INIT,siz:int=SIZ_INIT,sta:(float,float)=STA_INIT)≪constructor≫;+draw();-_cast_rays()]
+
+[Entity|+surface:pygame.SurfaceType;+position:(float,float,float);+color:(int,int,int);+size:int;state:(float,float);movement:(float,float,float)|+Entity(srf:pygame.SurfaceType,lvl:Level,pos:(float,float)=POS_INIT,col:(int,int,int)=COL_INIT,siz:int=SIZ_INIT,sta:(float,float)=STA_INIT)≪constructor≫;+set_state(x:float=None,y:float=None);+move();+draw();-_set_move_speed()]
+
+[Level|+map:((int));+surface:pygame.SurfaceType;+size:int;+block_size:int,+start_position:(float,float,float);+entities;+enemies|+Level(srf:pygame.SurfaceType),file:string=None,start_pos:(float,float,float)=START_POS]

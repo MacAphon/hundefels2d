@@ -249,7 +249,7 @@ class Player(e.Entity):
                     continue
 
             self._surface.set_clip(viewport_clip)  # only draw in the viewport
-            pg.draw.circle(self._surface, e_vals.color, (e_pos, 256), 10000 / e_dist)  # draw the entity
+            e_vals.draw_viewport(e_dist, e_pos)
             self._surface.set_clip(None)
 
         for ray in rays:  # fraw everything in front of all entities

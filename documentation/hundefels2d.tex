@@ -5,6 +5,7 @@
 
 \usepackage[ngerman]{babel}
 \usepackage{graphicx}
+\usepackage{amssymb}
 
 \begin{document}
 \maketitle
@@ -18,17 +19,17 @@
 Wenn diese Ziele nicht erreicht werden, wird das Projekt als Fehlschlag angesehen.
 
 \begin{itemize}
-\item Anzeigen eines 2D Levels in 2,5D (Raycasting Methode)
-\item Bewegungsfreiheit im Level (Translation und Rotation)
+\item Anzeigen eines 2D Levels in 2,5D (Raycasting Methode) \checkmark
+\item Bewegungsfreiheit im Level (Translation und Rotation) \checkmark
 \end{itemize}
 
 \subsection{Soll-Ziele}
 Diese Ziele müssen nicht unbedingt erreicht werden, sind aber für einen vollen Erfolg nötig.
 
 \begin{itemize}
-\item Laden von Leveln aus Dateien
-\item Anzeigen von anderen Objekten im Level (z.B. Gegner, Items)
-\item Kollisionserkennung
+\item Laden von Leveln aus Dateien \checkmark
+\item Anzeigen von anderen Objekten im Level (z.B. Gegner, Items) \checkmark
+\item Kollisionserkennung \checkmark
 \end{itemize}
 
 \subsection{Kann-Ziele}
@@ -70,7 +71,7 @@ UML Klassendiagramme wurden mit YUML erstellt.
 
 \subsection{Versionskontrollsystem}
 
-Ein GIT Repository wurde angelegt. Es kann unter \verb|https://github.com/MacAphon/hundefels2d| gefunden werden.
+Das GIT Repository kann unter \verb|https://github.com/MacAphon/hundefels2d| gefunden werden.
 
 \newpage
 \section{Mathematische Funktionsweise}
@@ -89,9 +90,11 @@ Solange $\leftarrow$ oder $\rightarrow$ gedrückt werden wird der
 \subsubsection*{Laufen}
 
 \subsection{Darstellung}
+
+\subsubsection*{Welt}
+
 \setlength{\unitlength}{1cm}
-Horizontaler Check
-\\
+Horizontaler Check:\\\\
 \begin{picture}(5,4)
 	% Gitternetz
 	\multiput(0,0)(1,0){6}{\line(0,1){4}}
@@ -110,10 +113,8 @@ Horizontaler Check
 	\put(2.1,2){\line(1,0){0.5}}
 	\put(3.68,0.75){\line(0,1){0.5}}
 	\put(3.43,1){\line(1,0){0.5}}
-\end{picture}
-\\
-Vertikaler Check
-\\
+\end{picture}\\\\
+Vertikaler Check:\\\\
 \begin{picture}(5,4)
 	% Gitternetz
 	\linethickness{0.4mm}
@@ -136,10 +137,60 @@ Vertikaler Check
 	\put(3.75,0.75){\line(1,0){0.5}}
 \end{picture}
 
+\subsubsection*{Entities}
+
 \newpage
 
 \section{Programmaufbau}
-\includegraphics[scale=0.35]{./img/yuml1}
+\includegraphics[scale=0.3]{./img/yuml-final}
+
+\verb|Main| enthält die main-funktion: Sie ist für das Setup am Anfang verantwortlich und enthält die Gameloop, die Spielereingaben etc. verarbeitet.
+
+Für \verb|Player| wäre der Name Camera wahrscheinlich insgesamt angemessener. Sie ist zwar auch für Die Bewegung des Spielers verantwortlich, enthält aber
+den gesamten Anzeige-Code für den Viewport.
+
+\verb|Entity| enthält den tatsächlichen Bewegungscode und Code um Dinge auf der Karte anzuzeigen.
+
+\verb|WorldObject| ist für bewegungslose Dinge, mit denen der Spieler nicht interagiert.
+
+\verb|Level| enthält die Daten der Welt unde die Kartenanzeigefunktion.
+
+
+\newpage
+
+\section{Entwicklungsprozess}
+
+% Die UML-Diagramme sind nicht absolut korrekt, geben aber einen guten Überblick
+
+\subsection{Stand 18.11.2021}
+
+\includegraphics[scale=0.34]{./img/yuml-1}
+
+Die erste halbwegs funktionierende Version: Ein gelber Punkt bewegt sich auf einem grauen Bildschirm
+
+\subsection{Stand 23.11.2021}
+
+\includegraphics[scale=0.25]{./img/yuml-2}
+
+Nun wird eine Karte auf der linken Hälfte des Fensters angezeigt.
+
+\subsection{Stand 02.12.2021}
+
+\includegraphics[scale=0.31]{./img/yuml-3}
+
+Das Bewegungssystem wurde fast vollständig erneuert, damit sich der Spieler drehen kann und die erste Version Raycasting wird nun auf der Karte angezeigt.
+
+\subsection{Stand 09.12.2021}
+
+\includegraphics[scale=0.3]{./img/yuml-4}
+
+In der rechten Hälfte des Fensters wird jetzt der First-Person Viewport angezeigt, ausserdem unterstützt das Programm jetzt Command-line Argumente.
+
+\subsection{Stand 07.01.2022}
+
+Dies ist die finale Version, sie entspricht dem UML-Diagramm in Abschnitt 4.
+
+Jetzt können auch Objekte in der Karte und im Viewport angezeigt werden, zusätzlich gibt es sehr rudimentäre Kollision.
 
 \newpage
 
@@ -181,7 +232,7 @@ Level werden im JSON-Format gespeichert.
 \end{itemize}
 
 \subsection{UI}
-\includegraphics[scale=1.11]{./img/ui}\\
+\includegraphics[scale=0.5]{./img/ui3}\\
 Das Anzeigefenster ist 1024 auf 512 Pixel groß.
 
 Die linke Hälfte enthält die Kartenansicht. Der Spieler wird mit einem gelben Punkt darestellt, Entities mit (standartmässig) blauen Punkten.
