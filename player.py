@@ -269,7 +269,7 @@ class Player(e.Entity):
         self._surface.set_clip(viewport_clip)  # only draw in the viewport
         h_width = WIDTH_3D / self._rays
         h_offset = OFFSET_3D + i * h_width
-        v_offset = (1 / dist + 0.001) * 9000
+        v_offset = (1 / (dist + 0.001)) * 9000
         pg.draw.line(self._surface, wall_color, (h_offset, 255 - v_offset), (h_offset, 255 + v_offset),
                      int(h_width) + 1)
 

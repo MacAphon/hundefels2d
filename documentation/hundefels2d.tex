@@ -80,21 +80,44 @@ Die Berechnungen werden 1 mal pro Frame ausgeführt. Idealerweise heißt das, da
 
 \subsection{Bewegung}
 
-Der aktuelle Bewegungszustand und die Position werden in den Variablen \verb|_state| und \verb|_position| gespeichert.
+Der aktuelle Bewegungszustand und die Position werden in den Variablen \verb|_state|, \verb|_movement| und \verb|_position| gespeichert.
 
-\subsubsection*{Drehung}
+\verb|_state| enthält die x- und y-Bewegungsgeschwindigkeit, sowie Rotationsgeschwindigkeit relativ zum Spieler, \verb|_movement| enthält die absoluten Geschwindikeitswerte.\\
 
-Solange $\leftarrow$ oder $\rightarrow$ gedrückt werden wird der
+Für jeden Frame wird überprüft, welche tasten aktuell gedrückt sind und dementsprechend \verb|_state| angepasst.
 
-
-\subsubsection*{Laufen}
+Aus \verb|_state| wird dann \verb|_movement| berechnet und diese Werte mit \verb|_position| addiert.
 
 \subsection{Darstellung}
 
 \subsubsection*{Welt}
 
+Vom Spieler ausgehend werden Strahlen in Paaren ausgesendet:
+
+Der horizontale Strahl überprüft bei vertikalen Linien, der vertikale Strahl bei horizontalen Linien.
+Mit dem Unterschied der Richtung funktionieren beide insgesamt gleich, die Erklärung konzentriert sich daher auf den horizontalen Strahl.\\
+
+Zuerst wird der x-Wert des Strahls $x_{ray}$ auf die nächste Linie gesetzt, danach der y-Wert $y_{ray}$ mit folgender Formel bestimmt: 
+
+$$y_ray = x_{player}-x_{ray}*(-1/\tan(\alpha_{ray})+y_{player}$$
+
+Nun wird der Strahl wiederholt um 1 in $x$-Richtung und um
+
+$$-block\_size * (-1/\tan(\alpha_{ray})$$
+
+in $y$-Richtung verschoben. Nach jedem Verschieben wird überprüft, um es sich beim neuen Block um eine Wand handelt, wenn ja wird abgebrochen und die zurückgelegte Entfernung, sowie die x- und y-Koordinaten des Strahls zurückgegeben.\\
+
+Von den zwei so berechneten Werten wird nun der kürzere Strahl ausgewählt, auf der Karte gezeichnet und als vertikale Linie  der Länge
+
+$$v\_offset = \frac{1}{dist + 0,001} * 9000 $$
+
+im Viewport angezeigt ($dist$ ist die Länge des Strahls, die zwei festen Werte verhindern, dass durch 0 geteilt wird und erhöhen den Wert auf eine sichtbare Länge).
+
+\newpage
+
+\subsubsection*{Beispiel}
 \setlength{\unitlength}{1cm}
-Horizontaler Check:\\\\
+Horizontaler Check, vertikaler Strahl:\\\\
 \begin{picture}(5,4)
 	% Gitternetz
 	\multiput(0,0)(1,0){6}{\line(0,1){4}}
@@ -114,7 +137,7 @@ Horizontaler Check:\\\\
 	\put(3.68,0.75){\line(0,1){0.5}}
 	\put(3.43,1){\line(1,0){0.5}}
 \end{picture}\\\\
-Vertikaler Check:\\\\
+Vertikaler Check, horizontaler Strahl:\\\\
 \begin{picture}(5,4)
 	% Gitternetz
 	\linethickness{0.4mm}
@@ -139,17 +162,33 @@ Vertikaler Check:\\\\
 
 \subsubsection*{Entities}
 
+Die Formel für die Berechnung der x-Position einer Entity im Viewport wird mit folgender Formel berechnet:
+
+$$
+x_{Fenster} = \frac{tan^{-1}{\frac{\Delta y_{entity, player}}{\Delta x_{entity, player}}} + \alpha_{player} + \beta_{player}}{\beta_{player}}*Fensterbreite
+$$
+
+
+$\alpha_{player}$ ist die Blickrichtung des Spielers, $\beta_{player}$ das Blickfeld.
+
+Einige Korrekturen werden dabei noch vorgenommen, um die Position der Entity auf dem Bildschirm nicht umherspringen zu lassen.\\
+
+Zuerst werden die Strahlen hinter der Entity angezeigt, dann die Entity selbst und zuletzt die Strahlen vor der Entity.
+
 \newpage
 
 \section{Programmaufbau}
-\includegraphics[scale=0.3]{./img/yuml-final}
+
+Die UML-Diagramme können in voller Größe im Git-Repo in \verb|dokumentation/img| gefunden werden. Die relevanten Dateien sind \verb|yuml-1.png|, \verb|yuml-2.png|, \verb|yuml-3.png|, \verb|yuml-4.png| und \verb|yuml-final.png|.
+ 
+\includegraphics[scale=0.15]{./img/yuml-final}
 
 \verb|Main| enthält die main-funktion: Sie ist für das Setup am Anfang verantwortlich und enthält die Gameloop, die Spielereingaben etc. verarbeitet.
 
 Für \verb|Player| wäre der Name Camera wahrscheinlich insgesamt angemessener. Sie ist zwar auch für Die Bewegung des Spielers verantwortlich, enthält aber
 den gesamten Anzeige-Code für den Viewport.
 
-\verb|Entity| enthält den tatsächlichen Bewegungscode und Code um Dinge auf der Karte anzuzeigen.
+\verb|Entity| enthält den tatsächlichen Bewegungscode und Code um sich selbst anzuzeigen.
 
 \verb|WorldObject| ist für bewegungslose Dinge, mit denen der Spieler nicht interagiert.
 
@@ -182,7 +221,7 @@ Das Bewegungssystem wurde fast vollständig erneuert, damit sich der Spieler dre
 
 \subsection{Stand 09.12.2021}
 
-\includegraphics[scale=0.3]{./img/yuml-4}
+\includegraphics[scale=0.2]{./img/yuml-4}
 
 In der rechten Hälfte des Fensters wird jetzt der First-Person Viewport angezeigt, ausserdem unterstützt das Programm jetzt Command-line Argumente.
 
@@ -196,7 +235,9 @@ Jetzt können auch Objekte in der Karte und im Viewport angezeigt werden, zusät
 
 \section{Steuerung}
 
-\subsection{Command-Line Argumente}
+\subsection{Start und Command-Line Argumente}
+
+Gestartet wird das Spiel mit \verb|py main.py| bzw. \verb|python3 main.py|.
 
 \begin{itemize}
 	\item \verb|-h --help| zeigt die CLI Argumente und beendet das Programm.
@@ -241,13 +282,15 @@ Die rechte Hälfte des Fensters ist der First-Person Viewport.
 
 \newpage
 
-\begin{flushleft}
-\begin{thebibliography}{99}
-	
-\bibitem{3dsage} 3DSage: ~ ``Make Your Own Raycaster Part 1'' ~ https://youtu.be/gYRrGTC7GtA\\ Quellcode verfügbar unter https://github.com/3DSage/OpenGL-Raycaster\_v1
+\section{Quellen}
 
-\bibitem{pygametut} Pygame tutorial: 	https://www.pygame.org/docs/tut/MakeGames.html
-\end{thebibliography}
-\end{flushleft}
+\begin{itemize}
+	\item 3DSage: ~ ``Make Your Own Raycaster Part 1'' ~ \verb|https://youtu.be/gYRrGTC7GtA|\\ Quellcode verfügbar unter \verb|https://github.com/3DSage/OpenGL-Raycaster\_v1|
+	
+	Für die Raycasting-Logik (Inhalt der Funktion \verb|_cast_rays()| in \verb|player.py|)
+	
+	\item Pygame tutorial: \verb|https://www.pygame.org/docs/tut/MakeGames.html|
+\end{itemize}
+
 
 \end{document}
