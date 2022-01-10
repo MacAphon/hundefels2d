@@ -45,6 +45,9 @@ def _load_file(file):
 
 
 class Level:
+    """
+    the world data
+    """
     def __init__(self, srf, file=None):
         self._surface = srf
         if file is not None:
@@ -65,6 +68,9 @@ class Level:
         self.map = tuple(self.map)
 
     def draw(self):
+        """
+        draw the map
+        """
         for y, yv in enumerate(self.map):
             for x, xv in enumerate(yv):
                 if xv == 1:

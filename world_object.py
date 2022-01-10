@@ -16,6 +16,9 @@ SIZ_INIT = 4
 
 
 class WorldObject(e.Entity):
+    """
+    static, non interacting entity
+    """
     def __init__(self, srf, pos=POS_INIT, col=COL_INIT, siz=SIZ_INIT):
         self._surface = srf
         self.position = pos

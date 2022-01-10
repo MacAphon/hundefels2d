@@ -34,6 +34,9 @@ logging.basicConfig(format="%(asctime)s:%(levelname)s:%(message)s", datefmt="%H:
 
 
 def main():
+    """
+    setup and main loop for the game
+    """
     logging.info("starting")
     logging.info(f"{argument_list=}")
 

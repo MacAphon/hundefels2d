@@ -44,6 +44,9 @@ MAP_CLIP = pg.Rect(0, 0, 512, 512)
 # function is outside of the class to work around limitations of numba
 @njit()  # make the function run a lot faster by using just in time compilation
 def _cast_rays(rays: int, fov: float, position: tuple, level_map: list, block_size: int, level_size: int):
+    """
+    calculate the length of rays on the map
+    """
     ray_angle_y = (position[2] - PI_HALFS)
     ray_angle_y += fov / 2
 
@@ -174,6 +177,9 @@ def _cast_rays(rays: int, fov: float, position: tuple, level_map: list, block_si
 
 
 class Player(e.Entity):
+    """
+    player controlled entity, camera of the game
+    """
     def __init__(self, srf, lvl, fov=90, rays=RAYS, pos=POS_INIT):
         self._surface = srf
         self._level = lvl
@@ -195,6 +201,9 @@ class Player(e.Entity):
         logging.info("created new Player")
 
     def draw(self, entities):
+        """
+        draw the viewport and the player on the map
+        """
 
         pg.draw.polygon(self._surface, SKY_COLOR, ((512, 0), (1024, 0), (1024, 255), (512, 255)))  # sky
 
@@ -212,6 +221,9 @@ class Player(e.Entity):
             entity.draw()
 
     def _entity_viewport_position(self, entity):
+        """
+        calculate the horizontal position of an entity in the viewport based on it's an the players positions
+        """
 
         dist = math.dist(self.position[:2], entity.position[:2])
 
