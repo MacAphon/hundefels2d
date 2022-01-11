@@ -99,11 +99,11 @@ Mit dem Unterschied der Richtung funktionieren beide insgesamt gleich, die Erkl�
 
 Zuerst wird der x-Wert des Strahls $x_{ray}$ auf die n채chste Linie gesetzt, danach der y-Wert $y_{ray}$ mit folgender Formel bestimmt: 
 
-$$y_ray = x_{player}-x_{ray}*(-1/\tan(\alpha_{ray})+y_{player}$$
+$$y_{ray} = x_{player}-x_{ray}*\frac{-1}{\tan(\alpha_{ray})}+y_{player}$$
 
 Nun wird der Strahl wiederholt um 1 in $x$-Richtung und um
 
-$$-block\_size * (-1/\tan(\alpha_{ray})$$
+$$-block\_size * \frac{-1}{\tan(\alpha_{ray}}$$
 
 in $y$-Richtung verschoben. Nach jedem Verschieben wird 체berpr체ft, um es sich beim neuen Block um eine Wand handelt, wenn ja wird abgebrochen und die zur체ckgelegte Entfernung, sowie die x- und y-Koordinaten des Strahls zur체ckgegeben.\\
 
